@@ -1,14 +1,10 @@
 #coding=utf-8
 
 import urllib2
-import httplib2
 import re
 import random
 from encryption import QQmd5
 import cookielib
-import requests
-import getpass
-import time
 import json
 
 DEBUG = True
@@ -135,6 +131,7 @@ class webqq:
         pass
 
     def poll2(self):
+        from runqq import msg_queue
         url = 'http://d.web2.qq.com/channel/poll2'
         data ='r=%7B%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%2C%22key%22%3A0%2C%22ids%22%3A%5B%5D%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
         req = urllib2.Request(url, data)
@@ -145,11 +142,13 @@ class webqq:
             for res in result['result']:
                 try:
                     if res['poll_type'] == 'message':
-                        print self.uin[res['value']['from_uin']] \
-                                ,': ', res['value']['content'][1]
+                        #print self.uin[res['value']['from_uin']] \
+                         #       ,': ', res['value']['content'][1]
+                        msg_queue.put((self.uin[res['value']['from_uin']], res['value']['content']))
                     elif res['poll_type'] == 'group_message':
-                        print self.gid[res['value']['from_uin']] \
-                                ,': ', res['value']['content'][1]
+                        #print self.gid[res['value']['from_uin']] \
+                         #       ,': ', res['value']['content'][1]
+                        msg_queue.put((self.gid[res['value']['from_uin']], res['value']['content']))
                     else:
                         pass
                 except:
@@ -175,7 +174,7 @@ class webqq:
         if DEBUG:print urllib2.urlopen(req).read()
         pass
 
-def main():
+def run():
     #user = raw_input('QQ:')
     #pwd = getpass.getpass('password: ')
     import os
@@ -202,4 +201,4 @@ def main():
         #qq.sendMsg('2236071402', 'geisf')
 
 if __name__ == "__main__":
-    main()
+    run()
