@@ -1,0 +1,16 @@
+import curses as cur
+
+win = cur.initscr()
+cur.nl()
+#win.border()
+win.box()
+win.resize(25, 50)
+#win.move(cur.LINES / 2, cur.COLS / 2)
+win.addstr(1, 1, str(cur.has_colors()))
+win.addstr(2, 1, str(cur.has_colors()))
+win.addstr(3, 1, str(cur.has_colors()))
+win.addstr(4, 1, str(cur.has_colors()))
+win.vline(0, 10, '|', 50)
+win.refresh()
+win.getch()
+cur.endwin()
