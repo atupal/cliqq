@@ -31,6 +31,7 @@ class webqq:
         self.clientid = str(random.randint(10000000, 99999999))
         self.friend = None
         self.group = None
+        self.categories = None
 
     def getSafeCode(self):
         url = 'https://ssl.ptlogin2.qq.com/check?uin=' + str(self.user) + '&appid=1003903&js_ver=10017&js_type=0&login_sig=0ihp3t5ghfoonssle-98x9hy4uaqmpvu*8*odgl5vyerelcb8fk-y3ts6c3*7e8-&u1=http%3A%2F%2Fweb2.qq.com%2Floginproxy.html&r=0.8210972726810724'
@@ -96,7 +97,7 @@ class webqq:
         req = urllib2.Request(url, data)
         req.add_header('Referer', 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1')
         req = urllib2.urlopen(req)
-        self.group = json.load(req)
+        self.group = json.load(req)['result']
         pass
 
     def getFriend(self):
@@ -105,8 +106,10 @@ class webqq:
         req = urllib2.Request(url, data)
         req.add_header('Referer', 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1')
         req = urllib2.urlopen(req)
-        self.friend = json.load(req)
-        if DEBUG:print self.friend
+        friend = json.load(req)
+        self.friend = friend['result']['friends']
+        self.categories = friend['result']['categories']
+        if DEBUG:print self.categories
         pass
 
     def getMeg(self):
@@ -120,7 +123,15 @@ class webqq:
         #req.add_header('Cookie', self.mycookie)
         req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=3')
         result = json.load(urllib2.urlopen(req))
-        if DEBUG:print result
+        if int(result['retcode']) == 0:
+            for res in result['result']:
+                try:
+                    print res['value']['content'][1]
+                except:
+                    print res
+                    pass
+        return
+        #if DEBUG:print result
 
 
     def sendMsg(self, uin, msg):
@@ -151,18 +162,18 @@ def main():
     qq.loginGet()
     qq.loginPost()
     qq.getGroupList()
-    #qq.getFriend()
-    while 0:
-        time.sleep(0.5)
+    qq.getFriend()
+    while 1:
         qq.poll2()
+        continue
     for i in range(100):
-        if DEBUG:print 'to', qq.friend['result']['info'][0]['uin']
-        if DEBUG:print 'to', qq.group['result']['gnamelist'][10]
+        if DEBUG:print 'to', qq.friend['info'][0]['uin']
+        if DEBUG:print 'to', qq.group['gnamelist'][10]
         #qq.sendMsg(str(qq.friend['result']['info'][0]['uin']), 'clientjsfzhiyong')
         ms = ''
         for _ in xrange(i):
             ms += '。'
-        qq.sendQunMsg(str(qq.group['result']['gnamelist'][10]['gid']), ms)
+        qq.sendQunMsg(str(qq.group['gnamelist'][10]['gid']), ms)
         #qq.sendMsg('2236071402', 'geisf')
 
 if __name__ == "__main__":
