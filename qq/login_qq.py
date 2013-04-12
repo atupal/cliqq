@@ -98,7 +98,15 @@ class webqq:
         req.add_header('Referer', 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1')
         req = urllib2.urlopen(req)
         self.group = json.load(req)['result']
-        pass
+        self.gid = dict()
+        self.gname = dict()
+        try:
+            for g in self.group['gnamelist']:
+                self.gid[g['gid']] = g['name']
+                self.gname[g['name']] = g['gid']
+                pass
+        except:
+            pass
 
     def getFriend(self):
         url = 'http://s.web2.qq.com/api/get_user_friends2'
@@ -107,10 +115,20 @@ class webqq:
         req.add_header('Referer', 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1')
         req = urllib2.urlopen(req)
         friend = json.load(req)
+        self.uin = dict()
+        self.markname = dict()
+        self.nick = dict()
+        self.cat = dict()
         self.friend = friend['result']['friends']
         self.categories = friend['result']['categories']
-        if DEBUG:print self.categories
-        pass
+        for fri in self.friend:
+            self.cat[fri['uin']] = fri['categories']
+        for info in friend['result']['info']:
+            self.nick[info['nick']] = info['uin']
+            self.uin[info['uin']] = info['nick']
+        for mark in friend['result']['marknames']:
+            self.markname[mark['markname']] = mark['uin']
+            self.uin[mark['uin']] = mark['markname']
 
     def getMeg(self):
         if DEBUG:print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()
@@ -126,9 +144,15 @@ class webqq:
         if int(result['retcode']) == 0:
             for res in result['result']:
                 try:
-                    print res['value']['content'][1]
+                    if res['poll_type'] == 'message':
+                        print self.uin[res['value']['from_uin']] \
+                                ,': ', res['value']['content'][1]
+                    elif res['poll_type'] == 'group_message':
+                        print self.gid[res['value']['from_uin']] \
+                                ,': ', res['value']['content'][1]
+                    else:
+                        pass
                 except:
-                    print res
                     pass
         return
         #if DEBUG:print result
@@ -163,6 +187,7 @@ def main():
     qq.loginPost()
     qq.getGroupList()
     qq.getFriend()
+
     while 1:
         qq.poll2()
         continue
