@@ -6,12 +6,14 @@ import random
 from encryption import QQmd5
 import cookielib
 import json
+import threading
 
 DEBUG = True
 
 import urllib
-class webqq:
-    def __init__(self, user, pwd):
+class webqq(threading.Thread):
+    def __init__(self, user, pwd, msg_queue):
+        threading.Thread.__init__(self)
         self.cookies = cookielib.CookieJar()
         self.opener = urllib2.build_opener(
                 urllib2.HTTPHandler(),
@@ -28,6 +30,7 @@ class webqq:
         self.friend = None
         self.group = None
         self.categories = None
+        self.msg_queue = msg_queue
 
     def getSafeCode(self):
         url = 'https://ssl.ptlogin2.qq.com/check?uin=' + str(self.user) + '&appid=1003903&js_ver=10017&js_type=0&login_sig=0ihp3t5ghfoonssle-98x9hy4uaqmpvu*8*odgl5vyerelcb8fk-y3ts6c3*7e8-&u1=http%3A%2F%2Fweb2.qq.com%2Floginproxy.html&r=0.8210972726810724'
@@ -126,12 +129,13 @@ class webqq:
             self.markname[mark['markname']] = mark['uin']
             self.uin[mark['uin']] = mark['markname']
 
+        print '信息拉取成功!'
+
     def getMeg(self):
         if DEBUG:print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()
         pass
 
     def poll2(self):
-        from runqq import msg_queue
         url = 'http://d.web2.qq.com/channel/poll2'
         data ='r=%7B%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%2C%22key%22%3A0%2C%22ids%22%3A%5B%5D%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
         req = urllib2.Request(url, data)
@@ -144,17 +148,21 @@ class webqq:
                     if res['poll_type'] == 'message':
                         #print self.uin[res['value']['from_uin']] \
                          #       ,': ', res['value']['content'][1]
-                        msg_queue.put((self.uin[res['value']['from_uin']], res['value']['content']))
+                        self.msg_queue.put((self.uin[res['value']['from_uin']], res['value']['content'][1]))
                     elif res['poll_type'] == 'group_message':
                         #print self.gid[res['value']['from_uin']] \
                          #       ,': ', res['value']['content'][1]
-                        msg_queue.put((self.gid[res['value']['from_uin']], res['value']['content']))
+                        self.msg_queue.put((self.gid[res['value']['from_uin']] + +'#'+self.uin[res['value']['send_uin']], res['value']['content'][1]))
                     else:
                         pass
                 except:
                     pass
         return
         #if DEBUG:print result
+
+    def run(self):
+        while True:
+            self.poll2()
 
 
     def sendMsg(self, uin, msg):
@@ -180,7 +188,8 @@ def run():
     import os
     user = os.environ['QQ']
     pwd = os.environ['QQ_PASSWD']
-    qq = webqq(user, pwd)
+    queue = Queue.Queue()
+    qq = webqq(user, pwd, queue)
     qq.getSafeCode()
     qq.loginGet()
     qq.loginPost()
@@ -199,6 +208,9 @@ def run():
             ms += '。'
         qq.sendQunMsg(str(qq.group['gnamelist'][10]['gid']), ms)
         #qq.sendMsg('2236071402', 'geisf')
+
+
+import Queue
 
 if __name__ == "__main__":
     run()
