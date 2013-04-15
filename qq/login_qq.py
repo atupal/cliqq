@@ -1,5 +1,4 @@
 #coding=utf-8
-
 import urllib2
 import re
 import random
@@ -9,6 +8,17 @@ import json
 import threading
 
 DEBUG = True
+'''
+self.user: 用户QQ名,可以为邮件地址
+self.cookie: 没有opener之前用来保存cookie的,给跪了....
+self.pwd: 用户密码
+self.clientid:
+self.friend: 好友列表信息
+self.group: 群组列表信息
+self.categories: 好友分组
+self.msg_queue: 收到的消息队列
+
+'''
 
 import urllib
 class webqq(threading.Thread):
@@ -48,7 +58,7 @@ class webqq(threading.Thread):
             url = 'https://ssl.captcha.qq.com/getimage?&uin='+str(self.user)+'&aid=1002101&0.45644426648505' + str(random.randint(10,99))
             req = urllib2.Request(url)
             req = urllib2.urlopen(req)
-            self.fi = open("./image.jgp", "wb")
+            self.fi = open("./verifyImg.jgp", "wb")
             while 1:
                 c = req.read()
                 if not c:

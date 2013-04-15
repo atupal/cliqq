@@ -33,7 +33,7 @@ def usage():
     print("                        and rgb_to_xterm by native methods")
     print("  --help              - this")
     print("  image               - Any image or gif (output will be animated)\n")
-    
+
 def xterm_to_rgb(xcolor):
     assert 0 <= xcolor <= 255
     if xcolor < 16:
@@ -86,7 +86,7 @@ def iterateImages(im):
         print("echo '\x1b[s'")
     else:
         sys.stdout.write('\x1b[s')
-    
+
     while True:
         if bash:
             print('cat <<"EOF"')
@@ -94,7 +94,7 @@ def iterateImages(im):
         printImage(getFrame(im))
         if bash:
             print("EOF")
-            
+
         try:
             im.seek(im.tell()+1)
             if bash:
@@ -126,7 +126,8 @@ def compile_speedup():
         res = xterm256_c.xterm_to_rgb_i(xcolor)
         return ((res >> 16) & 0xFF, (res >> 8) & 0xFF, res & 0xFF)
     return (xterm256_c.rgb_to_xterm, xterm_to_rgb)
-    
+
+'''
 try:
     opts, args = getopt.getopt(sys.argv[1:], "w:h:c:n:bv",["width=","height=","character=","native=","as-bash-script","help","verbose"])
 except:
@@ -154,23 +155,29 @@ if(len(args)==0):
     print("No image given")
     usage()
     sys.exit(1)
-im = Image.open(args[0])
-imgWidth = im.size[0]
-imgHeight = im.size[1]
+'''
+def main(img):
+    im = Image.open(img)
+    imgWidth = im.size[0]
+    imgHeight = im.size[1]
+    global width
+    global height
 
-try:
-    (rgb_to_xterm, xterm_to_rgb) = compile_speedup()
-except:
-    if verbose and not bash:
-        print("Failed to compile code, no speedup")
+    try:
+        (rgb_to_xterm, xterm_to_rgb) = compile_speedup()
+    except:
+        if verbose and not bash:
+            print("Failed to compile code, no speedup")
 
-if width!=0 or height!=0:
-    if width==0:
-        width=int(imgWidth*(height/float(imgHeight)))
-    if height==0:
-        height=int(imgHeight*(width/float(imgWidth)))
-else:
-    width = imgWidth
-    height = imgHeight
-    
-iterateImages(im)
+    if width!=0 or height!=0:
+        if width==0:
+            width=int(imgWidth*(height/float(imgHeight)))
+        if height==0:
+            height=int(imgHeight*(width/float(imgWidth)))
+    else:
+        width = imgWidth
+        height = imgHeight
+
+    iterateImages(im)
+
+main('verifyImg.jpg')
