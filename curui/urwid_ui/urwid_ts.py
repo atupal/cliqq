@@ -5,6 +5,27 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+try:from qq.runqq import msg_queue
+except:pass
+import threading
+from random import randint
+
+class process_msg_daemon(threading.Thread):
+    def __init__(self, msg_queue, qq):
+        threading.Thread.__init__(self)
+        self.msg_queue = msg_queue
+        self.qq = qq
+        self.locale_message = open('res/message.dat', 'aw')
+
+    def run(self):
+        while 1:
+            msg = self.msg_queue.get()
+            print msg[0], ':', msg[1]
+            self.locale_message.write(str(msg[0]) + ':' + str(msg[1]) + '\n')
+            if msg[3] == 1:self.qq.sendMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
+            elif self.qq.gid[msg[2]] == 'test_1' or self.qq.gid[msg[2]] == '啦啦啦*17-422*啦啦啦' or self.qq.gid[msg[2]] == "alg":
+                self.qq.sendQunMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
+            self.msg_queue.task_done()
 
 
 choices = {'friend', 'friend2', 'yukangle', '1', '2', '3'}
@@ -25,6 +46,11 @@ class top():
         self.flag = 0
         self.choices = set()
         Q.run()
+
+        Q.pro_msg = process_msg_daemon(msg_queue, Q.qq)
+        Q.pro_msg.setDaemon(True)
+        Q.pro_msg.start()
+
         for i in Q.qq.categories:
             self.choices.add(str(i['name']))
 
@@ -64,11 +90,14 @@ class top():
         cancel = urwid.Button('cancel')
         send = urwid.Button('send')
         self.main.original_widget = urwid.Filler(urwid.Pile([text, urwid.Divider(), urwid.Edit('content: '), cancel, send]))
-        urwid.connect_signal(cancel, 'click', self.begin)
-        urwid.connect_signal(send, 'click', self.begin)
+        urwid.connect_signal(cancel, 'click', self.cancel)
+        urwid.connect_signal(send, 'click', self.cancel)
         self.flag = 1
 
-    def begin(self):
+    def cancel(self,button):
+        self.main.original_widget = self.left_bar
+
+    def begin(self, button=None):
         self.flag = 0
         self.main = urwid.Padding(self.menu('friend', choices), left = 2, right = 2)
         self.left_bar = urwid.Overlay(self.main, urwid.SolidFill(u'\N{MEDIUM SHADE}'),

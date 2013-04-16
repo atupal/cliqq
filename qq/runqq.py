@@ -67,15 +67,19 @@ class runqq(threading.Thread):
         self.qq.start()
 
 
-        self.pro_msg = process_msg_daemon(msg_queue, self.qq)
-        self.pro_msg.setDaemon(True)
-        self.pro_msg.start()
+        #self.pro_msg = process_msg_daemon(msg_queue, self.qq)
+        #self.pro_msg.setDaemon(True)
+        #self.pro_msg.start()
         #while 1:
         #    msg_queue.join()
 
 import time
 if __name__ == "__main__":
-    runqq().start()
+    Q = runqq()
+    Q.run()
+    Q.pro_msg = process_msg_daemon(msg_queue, Q.qq)
+    Q.pro_msg.setDaemon(True)
+    Q.pro_msg.start()
     while  1:
         time.sleep(10)
         msg_queue.join()

@@ -139,7 +139,9 @@ class webqq(threading.Thread):
         except:
             print '部分群信息拉取失败'
             pass
+        print '拉取群信息...'
         print '群信息拉取成功'
+        print '拉取好友信息...'
         self.cookies.save('res/getGroupList.cookie')
 
     def getFriend(self):
@@ -175,48 +177,55 @@ class webqq(threading.Thread):
         pass
 
     def poll2(self):
-        url = 'http://d.web2.qq.com/channel/poll2'
-        data ='r=%7B%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%2C%22key%22%3A0%2C%22ids%22%3A%5B%5D%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
-        req = urllib2.Request(url, data)
-        #req.add_header('Cookie', self.mycookie)
-        req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=3')
-        result = json.load(urllib2.urlopen(req))
-        #正常返回
-        if int(result['retcode']) == 0:
-            for res in result['result']:
-                try:
-                    if res['poll_type'] == 'message':
-                        #print self.uin[res['value']['from_uin']] \
-                         #       ,': ', res['value']['content'][1]
-                        self.msg_queue.put( (str(datetime.datetime.now()) + '\n' + self.uin[res['value']['from_uin']], res['value']['content'][1], res['value']['from_uin'], 1 ))
-                    elif res['poll_type'] == 'group_message':
-                        #print self.gid[res['value']['from_uin']] \
-                         #       ,': ', res['value']['content'][1]
-                         try:
-                            self.msg_queue.put( (str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+self.uin[res['value']['send_uin']], res['value']['content'][1],
-                                res['value']['from_uin'] , 2))
-                         except:
-                                 self.msg_queue.put((str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+str(res['value']['send_uin']), res['value']['content'][1],
-                                res['value']['from_uin'], 2  ))
-                    else:
+        try:
+            url = 'http://d.web2.qq.com/channel/poll2'
+            data ='r=%7B%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%2C%22key%22%3A0%2C%22ids%22%3A%5B%5D%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+            req = urllib2.Request(url, data)
+            #req.add_header('Cookie', self.mycookie)
+            req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=3')
+            result = json.load(urllib2.urlopen(req))
+            #正常返回
+            if int(result['retcode']) == 0:
+                for res in result['result']:
+                    try:
+                        content = ''
+                        for i in res['value']['content'][1:]:
+                            content += str(i)
+                        if res['poll_type'] == 'message':
+                            #print self.uin[res['value']['from_uin']] \
+                             #       ,': ', res['value']['content'][1]
+                            self.msg_queue.put( (str(datetime.datetime.now()) + '\n' + self.uin[res['value']['from_uin']], content, res['value']['from_uin'], 1 ))
+                        elif res['poll_type'] == 'group_message':
+                            #print self.gid[res['value']['from_uin']] \
+                             #       ,': ', res['value']['content'][1]
+                             try:
+                                 self.msg_queue.put( (str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+self.uin[res['value']['send_uin']], content,
+                                    res['value']['from_uin'] , 2))
+                             except:
+                                 self.msg_queue.put((str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+str(res['value']['send_uin']), content,
+                                    res['value']['from_uin'], 2  ))
+                        else:
+                            pass
+                    except:
+                        if content != '':
+                            print res['value']
                         pass
-                except:
-                    print res['value']
-                    pass
-        #新的ptwebqq值
-        elif int(result['retcode']) == 116:
-            self.ptwebqq = result['p']
-        #掉线重连
-        elif int(result['retcode']) == 121:
-            self.qq = webqq(self.user, self.pwd, self.msg_queue)
-            self.qq.getSafeCode()
-            self.qq.loginGet()
-            self.qq.loginPost()
-            self.qq.getGroupList()
-            self.qq.getFriend()
-        else:
-            pass
-        return
+            #新的ptwebqq值
+            elif int(result['retcode']) == 116:
+                self.ptwebqq = result['p']
+            #掉线重连
+            elif int(result['retcode']) == 121:
+                self.qq = webqq(self.user, self.pwd, self.msg_queue)
+                self.qq.getSafeCode()
+                self.qq.loginGet()
+                self.qq.loginPost()
+                self.qq.getGroupList()
+                self.qq.getFriend()
+            else:
+                pass
+            return
+        except Exception as e:
+            print e
 
     def run(self):
         while True:
@@ -224,25 +233,29 @@ class webqq(threading.Thread):
 
 
     def sendMsg(self, uin, msg, face=None):
-        uin = str(uin)
-        url = 'http://d.web2.qq.com/channel/send_buddy_msg2'
-        if face is None:data = 'r=%7B%22to%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\",[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
-        else:data = 'r=%7B%22to%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\", [\"face\",'+str(face)+r'], [\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
-        req = urllib2.Request(url, data)
-        #req.add_header('Cookie', self.mycookie)
-        req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
-        if DEBUG:print urllib2.urlopen(req).read()
-        pass
+        try:
+            uin = str(uin)
+            url = 'http://d.web2.qq.com/channel/send_buddy_msg2'
+            if face is None:data = 'r=%7B%22to%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\",[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+            else:data = 'r=%7B%22to%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\", [\"face\",'+str(face)+r'], [\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+            req = urllib2.Request(url, data)
+            #req.add_header('Cookie', self.mycookie)
+            req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
+            if DEBUG:print urllib2.urlopen(req).read()
+        except Exception as e:
+            print e
 
     def sendQunMsg(self, uin, msg, face = None):
-        uin = str(uin)
-        url = 'http://d.web2.qq.com/channel/send_qun_msg2'
-        if face is None:data = 'r=%7B%22group_uin%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\",[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
-        else:data = 'r=%7B%22group_uin%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\", [\"face\",'+str(face)+r'], [\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
-        req = urllib2.Request(url, data)
-        req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
-        if DEBUG:print urllib2.urlopen(req).read()
-        pass
+        try:
+            uin = str(uin)
+            url = 'http://d.web2.qq.com/channel/send_qun_msg2'
+            if face is None:data = 'r=%7B%22group_uin%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\",[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+            else:data = 'r=%7B%22group_uin%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\", [\"face\",'+str(face)+r'], [\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+            req = urllib2.Request(url, data)
+            req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
+            if DEBUG:print urllib2.urlopen(req).read()
+        except Exception as e:
+            print e
 
 def run():
     #user = raw_input('QQ:')
