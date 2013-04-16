@@ -147,7 +147,10 @@ class webqq(threading.Thread):
     def getFriend(self):
         try:
             url = 'http://s.web2.qq.com/api/get_user_friends2'
-            data = 'r=%7B%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq'] +'%22%7D'
+            import getFriend2_hash
+            ptwebqq_hash = getFriend2_hash.getFriend2_hash('1063918489', self.ptwebqq)
+            #data = 'r=%7B%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq'] +'%22%7D'
+            data = 'r=%7B%22h%22%3A%22hello%22%2C%22hash%22%3A%22'+ptwebqq_hash+'%22%2C%22vfwebqq%22%3A%228b36266a8bd63fc0c1cdf4a11d2580f75d56a1c190dfa4dd00b706622f00f280af7bf034caf06e4e%22%7D'
             req = urllib2.Request(url, data)
             req.add_header('Referer', 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1')
             req = urllib2.urlopen(req)
