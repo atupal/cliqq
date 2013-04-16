@@ -7,6 +7,7 @@ import json
 import threading
 from encryption import QQmd5
 import datetime
+import verifyImg as verifyImg
 
 DEBUG = True
 
@@ -76,15 +77,14 @@ class webqq(threading.Thread):
             url = 'https://ssl.captcha.qq.com/getimage?&uin='+str(self.user)+'&aid=1002101&0.45644426648505' + str(random.randint(10,99))
             req = urllib2.Request(url)
             req = urllib2.urlopen(req)
-            self.fi = open("./verifyImg.jgp", "wb")
+            self.fi = open("res/verifyImg.jpg", "wb")
             while 1:
                 c = req.read()
                 if not c:
                     break
                 else :self.fi.write(c)
             self.fi.close()
-            import qq.verifyImg as verifyImg
-            verifyImg.main('qq/verifyImg.jpg')
+            verifyImg.main('res/verifyImg.jpg')
             self.verifycode1 = raw_input("verifer:")
         if DEBUG:print self.check, self.verifycode1, self.verifycode2
 
@@ -145,32 +145,37 @@ class webqq(threading.Thread):
         self.cookies.save('res/getGroupList.cookie')
 
     def getFriend(self):
-        url = 'http://s.web2.qq.com/api/get_user_friends2'
-        data = 'r=%7B%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq'] +'%22%7D'
-        req = urllib2.Request(url, data)
-        req.add_header('Referer', 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1')
-        req = urllib2.urlopen(req)
-        friend = json.load(req)
-        self.uin = dict()
-        self.markname = dict()
-        self.nick = dict()
-        self.cat = dict()
-        self.friend = friend['result']['friends']
-        self.categories = friend['result']['categories']
-        for fri in self.friend:
-            self.cat[fri['uin']] = fri['categories']
-        for info in friend['result']['info']:
-            self.nick[info['nick']] = info['uin']
-            self.uin[info['uin']] = info['nick']
-        for mark in friend['result']['marknames']:
-            self.markname[mark['markname']] = mark['uin']
-            self.uin[mark['uin']] = mark['markname']
+        try:
+            url = 'http://s.web2.qq.com/api/get_user_friends2'
+            data = 'r=%7B%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq'] +'%22%7D'
+            req = urllib2.Request(url, data)
+            req.add_header('Referer', 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1')
+            req = urllib2.urlopen(req)
+            friend = json.load(req)
+            self.uin = dict()
+            self.markname = dict()
+            self.nick = dict()
+            self.cat = dict()
+            self.friend = friend['result']['friends']
+            self.categories = friend['result']['categories']
+            for fri in self.friend:
+                self.cat[fri['uin']] = fri['categories']
+            for info in friend['result']['info']:
+                self.nick[info['nick']] = info['uin']
+                self.uin[info['uin']] = info['nick']
+            for mark in friend['result']['marknames']:
+                self.markname[mark['markname']] = mark['uin']
+                self.uin[mark['uin']] = mark['markname']
 
-        print '好友信息拉取成功!'
-        self.success_login = True
-        #with open('res/login_cookie', 'w') as f:
-        #    f.write(str(self.cookies))
-        self.cookies.save('res/getFriend.cookie')
+            print '好友信息拉取成功!'
+            self.success_login = True
+            #with open('res/login_cookie', 'w') as f:
+            #    f.write(str(self.cookies))
+            self.cookies.save('res/getFriend.cookie')
+        except Exception as e:
+            print friend
+            print e
+            self.getFriend()
 
     def getMeg(self):
         if DEBUG:print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()

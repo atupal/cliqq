@@ -27,7 +27,7 @@ class process_msg_daemon(threading.Thread):
             print msg[0], ':', msg[1]
             self.locale_message.write(str(msg[0]) + ':' + str(msg[1]) + '\n')
             if msg[3] == 1:self.qq.sendMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
-            elif self.qq.gid[msg[2]] == 'test_1' or self.qq.gid[msg[2]] == '啦啦啦*17-422*啦啦啦':
+            elif self.qq.gid[msg[2]] == 'test_1' or self.qq.gid[msg[2]] == '啦啦啦*17-422*啦啦啦' or self.qq.gid[msg[2]] == 'zs10634':
                 self.qq.sendQunMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
             self.msg_queue.task_done()
 
