@@ -1,7 +1,11 @@
 #coding=utf-8
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 from login_qq import webqq
 import threading
 import Queue
+from random import randint
 
 msg_queue = Queue.Queue()
 test_flag = 5
@@ -11,9 +15,10 @@ def poll2_daemon(qq):
         qq.poll2()
 
 class process_msg_daemon(threading.Thread):
-    def __init__(self, msg_queue):
+    def __init__(self, msg_queue, qq):
         threading.Thread.__init__(self)
         self.msg_queue = msg_queue
+        self.qq = qq
         self.locale_message = open('res/message.dat', 'aw')
 
     def run(self):
@@ -21,6 +26,7 @@ class process_msg_daemon(threading.Thread):
             msg = self.msg_queue.get()
             print msg[0], ':', msg[1]
             self.locale_message.write(str(msg[0]) + ':' + str(msg[1]) + '\n')
+            if msg[3] == 1:self.qq.sendMsg(msg[2], '我寂寞装逼迷人', face = randint(1,110))
             self.msg_queue.task_done()
 
 class senf_msg_daemon(threading.Thread):
@@ -44,6 +50,10 @@ class runqq(threading.Thread):
         import os
         user = os.environ['QQ']
         pwd = os.environ['QQ_PASSWD']
+
+        self.user = user
+        self.pwd = pwd
+
         self.qq = webqq(user, pwd, msg_queue)
         self.qq.getSafeCode()
         self.qq.loginGet()
@@ -55,8 +65,15 @@ class runqq(threading.Thread):
         self.qq.start()
 
 
-        self.pro_msg = process_msg_daemon(msg_queue)
+        self.pro_msg = process_msg_daemon(msg_queue, self.qq)
         self.pro_msg.setDaemon(True)
         self.pro_msg.start()
         #while 1:
         #    msg_queue.join()
+
+import time
+if __name__ == "__main__":
+    runqq().start()
+    while  1:
+        time.sleep(10)
+        msg_queue.join()

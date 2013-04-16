@@ -31,7 +31,17 @@ import urllib
 class webqq(threading.Thread):
     def __init__(self, user, pwd, msg_queue):
         threading.Thread.__init__(self)
-        self.cookies = cookielib.CookieJar()
+        #self.cookies = cookielib.CookieJar()
+        self.cookies = cookielib.MozillaCookieJar()
+        try:
+            self.cookies.load('res/loginGet.cookie')
+            self.cookies.load('res/loginPost.cookie')
+            self.cookies.load('res/getGroupList.cookie')
+            self.cookies.load('res/getFriend.cookie')
+            print '成功读取cookie并加载'
+            print self.cookies
+        except Exception as e:
+            print '读取cookie失败', str(e)
         self.opener = urllib2.build_opener(
                 urllib2.HTTPHandler(),
                 urllib2.HTTPSHandler(),
@@ -99,6 +109,7 @@ class webqq(threading.Thread):
         if DEBUG:print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()
         #cs = ['%s=%s' %  (c.name, c.value) for c in self.cookies]
         #self.mycookie += ";" "; ".join(cs)
+        self.cookies.save('res/loginGet.cookie')
 
     def loginPost(self):
         url = 'http://d.web2.qq.com/channel/login2'
@@ -109,6 +120,7 @@ class webqq(threading.Thread):
         req = urllib2.urlopen(req)
         self.result = json.load(req)
         if DEBUG:print self.result['result']['vfwebqq'], self.result['result']['psessionid']
+        self.cookies.save('res/loginPost.cookie')
 
     def getGroupList(self):
         url = 'http://s.web2.qq.com/api/get_group_name_list_mask2'
@@ -128,6 +140,7 @@ class webqq(threading.Thread):
             print '部分群信息拉取失败'
             pass
         print '群信息拉取成功'
+        self.cookies.save('res/getGroupList.cookie')
 
     def getFriend(self):
         url = 'http://s.web2.qq.com/api/get_user_friends2'
@@ -153,6 +166,9 @@ class webqq(threading.Thread):
 
         print '好友信息拉取成功!'
         self.success_login = True
+        #with open('res/login_cookie', 'w') as f:
+        #    f.write(str(self.cookies))
+        self.cookies.save('res/getFriend.cookie')
 
     def getMeg(self):
         if DEBUG:print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()
@@ -165,36 +181,52 @@ class webqq(threading.Thread):
         #req.add_header('Cookie', self.mycookie)
         req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=3')
         result = json.load(urllib2.urlopen(req))
+        #正常返回
         if int(result['retcode']) == 0:
             for res in result['result']:
                 try:
                     if res['poll_type'] == 'message':
                         #print self.uin[res['value']['from_uin']] \
                          #       ,': ', res['value']['content'][1]
-                        self.msg_queue.put((str(datetime.datetime.now()) + '\n' + self.uin[res['value']['from_uin']], res['value']['content'][1]))
+                        self.msg_queue.put( (str(datetime.datetime.now()) + '\n' + self.uin[res['value']['from_uin']], res['value']['content'][1], str(res['value']['from_uin']), 1 ))
                     elif res['poll_type'] == 'group_message':
                         #print self.gid[res['value']['from_uin']] \
                          #       ,': ', res['value']['content'][1]
                          try:
-                            self.msg_queue.put((str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+self.uin[res['value']['send_uin']], res['value']['content'][1]))
+                            self.msg_queue.put( (str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+self.uin[res['value']['send_uin']], res['value']['content'][1],
+                                str(res['value']['from_uin']) , 2))
                          except:
-                                 self.msg_queue.put((str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+str(res['value']['send_uin']), res['value']['content'][1]))
+                                 self.msg_queue.put((str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+str(res['value']['send_uin']), res['value']['content'][1],
+                                str(res['value']['from_uin']), 2  ))
                     else:
                         pass
                 except:
                     print res['value']
                     pass
+        #新的ptwebqq值
+        elif int(result['retcode']) == 116:
+            self.ptwebqq = result['p']
+        #掉线重连
+        elif int(result['retcode']) == 121:
+            self.qq = webqq(self.user, self.pwd, self.msg_queue)
+            self.qq.getSafeCode()
+            self.qq.loginGet()
+            self.qq.loginPost()
+            self.qq.getGroupList()
+            self.qq.getFriend()
+        else:
+            pass
         return
-        #if DEBUG:print result
 
     def run(self):
         while True:
             self.poll2()
 
 
-    def sendMsg(self, uin, msg):
+    def sendMsg(self, uin, msg, face=None):
         url = 'http://d.web2.qq.com/channel/send_buddy_msg2'
-        data = 'r=%7B%22to%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\",[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+        if face is None:data = 'r=%7B%22to%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\",[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+        else:data = 'r=%7B%22to%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\", [\"face\",'+str(face)+r'], [\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
         req = urllib2.Request(url, data)
         #req.add_header('Cookie', self.mycookie)
         req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
