@@ -6,6 +6,7 @@ import cookielib
 import json
 import threading
 from encryption import QQmd5
+import datetime
 
 DEBUG = True
 
@@ -23,6 +24,7 @@ self.uin        : 用户ID->用户名字
 self.markname   : 用户备注->用户ID
 self.nick       : 用户昵称->用户ID
 self.cat        : 用户ID->分组
+self.gcode      : 群ID->群信息
 '''
 
 import urllib
@@ -123,7 +125,9 @@ class webqq(threading.Thread):
                 self.gname[g['name']] = g['gid']
                 pass
         except:
+            print '部分群信息拉取失败'
             pass
+        print '群信息拉取成功'
 
     def getFriend(self):
         url = 'http://s.web2.qq.com/api/get_user_friends2'
@@ -147,7 +151,7 @@ class webqq(threading.Thread):
             self.markname[mark['markname']] = mark['uin']
             self.uin[mark['uin']] = mark['markname']
 
-        print '信息拉取成功!'
+        print '好友信息拉取成功!'
         self.success_login = True
 
     def getMeg(self):
@@ -167,11 +171,14 @@ class webqq(threading.Thread):
                     if res['poll_type'] == 'message':
                         #print self.uin[res['value']['from_uin']] \
                          #       ,': ', res['value']['content'][1]
-                        self.msg_queue.put((self.uin[res['value']['from_uin']], res['value']['content'][1]))
+                        self.msg_queue.put((str(datetime.datetime.now()) + '\n' + self.uin[res['value']['from_uin']], res['value']['content'][1]))
                     elif res['poll_type'] == 'group_message':
                         #print self.gid[res['value']['from_uin']] \
                          #       ,': ', res['value']['content'][1]
-                        self.msg_queue.put((self.gid[res['value']['from_uin']] +'#'+self.uin[res['value']['send_uin']], res['value']['content'][1]))
+                         try:
+                            self.msg_queue.put((str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+self.uin[res['value']['send_uin']], res['value']['content'][1]))
+                         except:
+                                 self.msg_queue.put((str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+str(res['value']['send_uin']), res['value']['content'][1]))
                     else:
                         pass
                 except:

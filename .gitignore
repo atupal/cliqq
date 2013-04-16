@@ -33,9 +33,12 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
-
+################################################################
 #picture
 .jpg
 .png
 .jpeg
 .gif
+
+#local resource
+message.dat

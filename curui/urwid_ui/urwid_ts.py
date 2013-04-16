@@ -18,14 +18,16 @@ group_list = {
         }
 
 class top():
-    def __init__(self, Q):
+    def __init__(self, Q=None):
+        if Q is None:
+            self.choices = choices
+            return
         self.flag = 0
         self.choices = set()
-        Q.start()
-        while not Q.qq.success_login:
-            pass
+        Q.run()
         for i in Q.qq.categories:
             self.choices.add(str(i['name']))
+
     def line_dialog(self, uid, Text = None):
         text = urwid.Text(uid, align = 'center', wrap='clip')
         for i in Text:
@@ -75,3 +77,6 @@ class top():
                 min_width = 20, min_height = 9)
         #left_bar = urwid.Pile([left_bar, open_line])
         urwid.MainLoop(self.left_bar, palette = [('reversed', 'standout', '')]).run()
+
+if __name__ == "__main__":
+    top().begin()

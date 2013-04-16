@@ -14,11 +14,13 @@ class process_msg_daemon(threading.Thread):
     def __init__(self, msg_queue):
         threading.Thread.__init__(self)
         self.msg_queue = msg_queue
+        self.locale_message = open('res/message.dat', 'aw')
 
     def run(self):
         while 1:
             msg = self.msg_queue.get()
             print msg[0], ':', msg[1]
+            self.locale_message.write(str(msg[0]) + ':' + str(msg[1]) + '\n')
             self.msg_queue.task_done()
 
 class senf_msg_daemon(threading.Thread):
@@ -56,5 +58,5 @@ class runqq(threading.Thread):
         self.pro_msg = process_msg_daemon(msg_queue)
         self.pro_msg.setDaemon(True)
         self.pro_msg.start()
-        while 1:
-            msg_queue.join()
+        #while 1:
+        #    msg_queue.join()
