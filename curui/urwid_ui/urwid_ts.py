@@ -1,4 +1,9 @@
+#coding=utf-8
+
 import urwid
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 
@@ -13,8 +18,14 @@ group_list = {
         }
 
 class top():
-    def __init__(self):
+    def __init__(self, Q):
         self.flag = 0
+        self.choices = set()
+        Q.start()
+        while not Q.qq.success_login:
+            pass
+        for i in Q.qq.categories:
+            self.choices.add(str(i['name']))
     def line_dialog(self, uid, Text = None):
         text = urwid.Text(uid, align = 'center', wrap='clip')
         for i in Text:
@@ -23,7 +34,7 @@ class top():
 
     def menu(self, title, choices):
         self.body = [urwid.Text(title), urwid.Divider()]
-        for c in choices:
+        for c in self.choices:
             button = urwid.Button(c)
             urwid.connect_signal(button, 'click', self.group_chosen, c)
             self.body.append(urwid.AttrMap(button, None, focus_map = 'reversed'))
@@ -48,10 +59,15 @@ class top():
         text = self.line_dialog(uid = '123', Text = ['11241234', 'q234'])
         #self.body.append(text)
         #self.main.original_widget = urwid.Columns([urwid.Filler(urwid.Padding(urwid.ListBox(urwid.SimpleFocusListWalker(self.body)), left = 2, right = 2)), text])
-        self.main.original_widget = urwid.Filler(urwid.Pile([text, urwid.Divider(), urwid.Edit('content: '), urwid.Button('cancel'), urwid.Button('send')]))
+        cancel = urwid.Button('cancel')
+        send = urwid.Button('send')
+        self.main.original_widget = urwid.Filler(urwid.Pile([text, urwid.Divider(), urwid.Edit('content: '), cancel, send]))
+        urwid.connect_signal(cancel, 'click', self.begin)
+        urwid.connect_signal(send, 'click', self.begin)
         self.flag = 1
 
     def begin(self):
+        self.flag = 0
         self.main = urwid.Padding(self.menu('friend', choices), left = 2, right = 2)
         self.left_bar = urwid.Overlay(self.main, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
                 align = 'left', width = ('relative', 40),
@@ -59,5 +75,3 @@ class top():
                 min_width = 20, min_height = 9)
         #left_bar = urwid.Pile([left_bar, open_line])
         urwid.MainLoop(self.left_bar, palette = [('reversed', 'standout', '')]).run()
-
-top().begin()

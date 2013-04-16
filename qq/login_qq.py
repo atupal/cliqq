@@ -2,22 +2,27 @@
 import urllib2
 import re
 import random
-from encryption import QQmd5
 import cookielib
 import json
 import threading
+from encryption import QQmd5
 
 DEBUG = True
-'''
-self.user: 用户QQ名,可以为邮件地址
-self.cookie: 没有opener之前用来保存cookie的,给跪了....
-self.pwd: 用户密码
-self.clientid:
-self.friend: 好友列表信息
-self.group: 群组列表信息
-self.categories: 好友分组
-self.msg_queue: 收到的消息队列
 
+'''
+self.user       : 用户QQ名,可以为邮件地址
+self.cookie     : 没有opener之前用来保存cookie的,给跪了....
+self.pwd        : 用户密码
+self.friend     : 好友列表信息
+self.group      : 群组列表信息
+self.categories : 好友分组
+self.msg_queue  : 收到的消息队列
+self.gid        : 群ID->群名字
+self.gname      : 群名字->群ID
+self.uin        : 用户ID->用户名字
+self.markname   : 用户备注->用户ID
+self.nick       : 用户昵称->用户ID
+self.cat        : 用户ID->分组
 '''
 
 import urllib
@@ -41,6 +46,7 @@ class webqq(threading.Thread):
         self.group = None
         self.categories = None
         self.msg_queue = msg_queue
+        self.success_login = False
 
     def getSafeCode(self):
         url = 'https://ssl.ptlogin2.qq.com/check?uin=' + str(self.user) + '&appid=1003903&js_ver=10017&js_type=0&login_sig=0ihp3t5ghfoonssle-98x9hy4uaqmpvu*8*odgl5vyerelcb8fk-y3ts6c3*7e8-&u1=http%3A%2F%2Fweb2.qq.com%2Floginproxy.html&r=0.8210972726810724'
@@ -65,6 +71,8 @@ class webqq(threading.Thread):
                     break
                 else :self.fi.write(c)
             self.fi.close()
+            import qq.verifyImg as verifyImg
+            verifyImg.main('qq/verifyImg.jpg')
             self.verifycode1 = raw_input("verifer:")
         if DEBUG:print self.check, self.verifycode1, self.verifycode2
 
@@ -140,6 +148,7 @@ class webqq(threading.Thread):
             self.uin[mark['uin']] = mark['markname']
 
         print '信息拉取成功!'
+        self.success_login = True
 
     def getMeg(self):
         if DEBUG:print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()
@@ -162,10 +171,11 @@ class webqq(threading.Thread):
                     elif res['poll_type'] == 'group_message':
                         #print self.gid[res['value']['from_uin']] \
                          #       ,': ', res['value']['content'][1]
-                        self.msg_queue.put((self.gid[res['value']['from_uin']] + +'#'+self.uin[res['value']['send_uin']], res['value']['content'][1]))
+                        self.msg_queue.put((self.gid[res['value']['from_uin']] +'#'+self.uin[res['value']['send_uin']], res['value']['content'][1]))
                     else:
                         pass
                 except:
+                    print res['value']
                     pass
         return
         #if DEBUG:print result

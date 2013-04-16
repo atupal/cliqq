@@ -32,25 +32,29 @@ class senf_msg_daemon(threading.Thread):
             print send
             self.send_queue.task_done()
 
-def run():
-    #user = raw_input('QQ:')
-    #pwd = getpass.getpass('password: ')
-    import os
-    user = os.environ['QQ']
-    pwd = os.environ['QQ_PASSWD']
-    qq = webqq(user, pwd, msg_queue)
-    qq.getSafeCode()
-    qq.loginGet()
-    qq.loginPost()
-    qq.getGroupList()
-    qq.getFriend()
+class runqq(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.lock = threading.Condition()
+    def run(self):
+        #user = raw_input('QQ:')
+        #pwd = getpass.getpass('password: ')
+        import os
+        user = os.environ['QQ']
+        pwd = os.environ['QQ_PASSWD']
+        self.qq = webqq(user, pwd, msg_queue)
+        self.qq.getSafeCode()
+        self.qq.loginGet()
+        self.qq.loginPost()
+        self.qq.getGroupList()
+        self.qq.getFriend()
 
-    qq.setDaemon(True)
-    qq.start()
-    pro_msg = process_msg_daemon(msg_queue)
-    pro_msg.setDaemon(True)
-    pro_msg.start()
-    while 1:
-        msg_queue.join()
-if __name__ == "__main__":
-    run()
+        self.qq.setDaemon(True)
+        self.qq.start()
+
+
+        self.pro_msg = process_msg_daemon(msg_queue)
+        self.pro_msg.setDaemon(True)
+        self.pro_msg.start()
+        while 1:
+            msg_queue.join()

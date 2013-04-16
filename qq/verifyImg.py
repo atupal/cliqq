@@ -180,4 +180,4 @@ def main(img):
 
     iterateImages(im)
 
-main('verifyImg.jpg')
+#main('verifyImg.jpg')
