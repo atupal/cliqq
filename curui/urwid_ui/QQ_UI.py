@@ -28,24 +28,14 @@ class process_msg_daemon(threading.Thread):
             self.msg_queue.task_done()
 
 
-choices = {'friend', 'friend2', 'yukangle', '3', '2', '1','4', '5', '6', '7', '8', '9', '10', '11', '12','13','15', 'a', 'b', 'c', 'd', 'e', 'd', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v','x','y','z','hef','dsfl','sdf'}
-choices = {'friend', 'friend2', 'yukangle','1', '2','3'}
-group_list = {
-        'friend'   : {'tom', 'jimi', 'marry'},
-        'friend2'  : {'burenshi', 'nimei'},
-        'yukangle' : {'atupal', 'fy', 'wsq'},
-        '1'        : {'1', '11', '111'},
-        '2'        : {'2', '222', '2222'},
-        '3'        : {'3', '33', '333'},
-        }
-
-class top():
+choices = {'friend', 'friend2', 'yukangle','1', '2','3', '4', '5', '6', '7', '8', '9', '10', '12', '123', 'nimei', 'nimei_1', 'nimie_2', 'dsnfaf', 'sfsf', 'sdfjkasdjfl', 'sdfzhe s', }
+class QQ_UI():
     def __init__(self, Q=None):
         if Q is None:
-            self.choices = choices
+            self.categories = choices
             return
         self.flag = 0
-        self.choices = set()
+        self.categories = set()
         Q.run()
 
         Q.pro_msg = process_msg_daemon(msg_queue, Q.qq)
@@ -53,7 +43,9 @@ class top():
         Q.pro_msg.start()
 
         for i in Q.qq.categories:
-            self.choices.add(str(i['name']))
+            self.categories.add(str(i['name']))
+
+        self.palette = []
 
     def line_dialog(self, uid, Text = None):
         text = urwid.Text(uid, align = 'center', wrap='clip')
@@ -61,52 +53,62 @@ class top():
             text.set_text(text.text + '\n' + i)
         return text
 
-    def menu(self, title, choices):
-        self.body = [urwid.Text(title), urwid.Divider()]
-        for c in self.choices:
+    def categories_list(self):
+        self.cat_list_body = [urwid.Text(u'好友列表'), urwid.Divider()]
+        for c in self.categories:
             button = urwid.Button(c)
-            urwid.connect_signal(button, 'click', self.group_chosen, c)
-            self.body.append(urwid.AttrMap(button, None, focus_map = 'reversed'))
-        open_line = urwid.Button('open_line')
-        urwid.connect_signal(open_line, 'click', self.open_dialog)
-        self.body.append(urwid.Divider())
-        self.body.append(open_line)
-        return urwid.ListBox(urwid.SimpleFocusListWalker(self.body))
+            urwid.connect_signal(button, 'click', self.category_chosen, c)
+            self.cat_list_body.append(urwid.AttrMap(button, None, focus_map = 'reversed'))
 
-    def group_chosen(self, button, choice):
-        response = urwid.Text(['You are chose', choice, '\n'])
-        done = urwid.Button('ok')
-        urwid.connect_signal(done, 'click', self.exit_program)
-        self.main.original_widget = urwid.Filler(urwid.Pile([response, urwid.AttrMap(done, None, focus_map='reserved')]))
+        self.cat_list_listBox = urwid.ListBox(urwid.SimpleFocusListWalker(self.cat_list_body))
+        return self.cat_list_listBox
+
+    def msg_bubble(self):
+        testButton = urwid.Button('test')
+        urwid.connect_signal(testButton, 'click', self.msg_chosen, 'test')
+        self.msg_bubble_body = urwid.SimpleFocusListWalker([urwid.Divider(),urwid.Divider(), urwid.Text(u'消息'), testButton])
+        self.msg_bubble_listBox = urwid.ListBox(self.msg_bubble_body)
+        return self.msg_bubble_listBox
+
+    def category_chosen(self, button, category):
+        #pos = self.cat_list_listBox.focus_position
+        #self.cat_list_listBox.body.insert(pos + 1, urwid.Text(' nimei'))
+        response = urwid.Text(['You are chose', category , '\n'])
+        click = urwid.Button('ok')
+        urwid.connect_signal(click, 'click', self.exit_program)
+        #self.base.original_widget = urwid.Filler(urwid.Pile([response, urwid.AttrMap(click, None, focus_map='reserved')]))
+        self.loop.widget = urwid.Filler(urwid.Pile([response, urwid.AttrMap(click, None, focus_map='reserved')]))
+
+    def msg_chosen(self, button, msg_userName):
+        self.base.contents[1:] =[(urwid.ListBox([urwid.Button(msg_userName)]), self.base.options())]
 
     def  exit_program(self, button):
         raise urwid.ExitMainLoop()
 
-    def open_dialog(self, button):
-        if self.flag:
-            return
-        text = self.line_dialog(uid = '123', Text = ['11241234', 'q234'])
-        #self.body.append(text)
-        #self.main.original_widget = urwid.Columns([urwid.Filler(urwid.Padding(urwid.ListBox(urwid.SimpleFocusListWalker(self.body)), left = 2, right = 2)), text])
-        cancel = urwid.Button('cancel')
-        send = urwid.Button('send')
-        self.main.original_widget = urwid.Filler(urwid.Pile([text, urwid.Divider(), urwid.Edit('content: '), cancel, send]))
-        urwid.connect_signal(cancel, 'click', self.cancel)
-        urwid.connect_signal(send, 'click', self.cancel)
-        self.flag = 1
-
     def cancel(self,button):
-        self.main.original_widget = self.left_bar
+        pass
 
     def begin(self, button=None):
-        self.flag = 0
-        self.main = urwid.Padding(self.menu('friend', choices), left = 2, right = 2)
-        self.left_bar = urwid.Overlay(self.main, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
-                align = 'left', width = ('relative', 40),
-                valign = 'top', height = ('relative', 90),
+        #好友列表
+        self.cat_list_pad = urwid.Padding(self.categories_list(), left = 2, right = 2)
+        self.cat_list_overlay = urwid.Overlay(self.cat_list_pad, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
+                align = 'left', width = 40,
+                valign = 'top', height = 40,
                 min_width = 20, min_height = 9)
-        #left_bar = urwid.Pile([left_bar, open_line])
-        urwid.MainLoop(self.left_bar, palette = [('reversed', 'standout', '')]).run()
+
+
+        #消息气泡
+        self.msg_bubble_pad = urwid.Padding(self.msg_bubble(), left = 2, right = 2)
+        self.msg_bubble_overlay = urwid.Overlay(self.msg_bubble_pad, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
+                align = 'left', width = 40,
+                valign = 'top', height = 40,
+                min_width = 20, min_height = 1)
+
+        self.left_bar_pile = urwid.Pile([self.cat_list_overlay, self.msg_bubble_overlay])
+
+        self.base = urwid.Columns([self.left_bar_pile], dividechars = 1, min_width = 10)
+        self.loop = urwid.MainLoop(self.base, palette = [('reversed', 'standout', '')])
+        self.loop.run()
 
 if __name__ == "__main__":
-    top().begin()
+    QQ_UI().begin()
