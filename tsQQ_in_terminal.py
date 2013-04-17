@@ -11,7 +11,8 @@ if __name__ == "__main__":
     Q.pro_msg.setDaemon(True)
     Q.pro_msg.start()
     qz = qzone.qzone(Q.qq)
-    print qz.dispose_shuoshuo('婉拒妹子把妹让-test')
+    #print qz.dispose_shuoshuo('我寂寞装逼迷人-test @2596600470')
+    print qz.comment_shuoshuo(None, '我寂寞装逼迷人-test')
     exit()
     while  1:
         time.sleep(10)

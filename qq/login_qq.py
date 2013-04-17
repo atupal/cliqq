@@ -278,8 +278,13 @@ class webqq(threading.Thread):
             if origin     : req.add_header('Origin', origin)
             if host       : req.add_header('Host', host)
             req = urllib2.urlopen(req)
-            print req.read()
-            return req
+            return req.read()
+
+    def getCookie(self, name):
+        for c in self.cookies:
+            if c.name == name:
+                return c.value
+        return None
 
 def run():
     #user = raw_input('QQ:')
