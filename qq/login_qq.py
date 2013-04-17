@@ -271,17 +271,14 @@ class webqq(threading.Thread):
             print e
 
     def request(self, url, methods = ['GET', 'POST'], data = None, referer = None, user_agent = None, origin = None, host = None):
-            if data:
-                req = urllib2.Request(url, data)
-            else:
-                req = urllib2.Request(url)
-            if referer:req.add_header('Referer', referer)
-            if user_agent:req.add_header('User-Agent', user_agent)
-            if origin:req.add_header('Origin', origin)
-            if host:req.add_header('Host', host)
-            print req.get_header('Referer')
-            print req.get_header('Host')
+            req = urllib2.Request(url)
+            if data       : req.add_data(data)
+            if referer    : req.add_header('Referer', referer)
+            if user_agent : req.add_header('User-Agent', user_agent)
+            if origin     : req.add_header('Origin', origin)
+            if host       : req.add_header('Host', host)
             req = urllib2.urlopen(req)
+            print req.read()
             return req
 
 def run():
