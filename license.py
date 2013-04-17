@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  license.py
-#  author: atupal
+#  file   : license.py
+#  author : atupal
 #
 #  Copyright 2013 atupal [HUST university uniquestudio algorithm group] <me@atupal.org>
 #
@@ -21,4 +21,4 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-#
+#  site: http://atupal.org
