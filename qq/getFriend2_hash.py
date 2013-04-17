@@ -51,4 +51,4 @@ def getFriend2_hash(a, e):
     return d
 
 if __name__ == "__main__":
-    print getFriend2_hash('1063918489', 'ebbcc85a6030a4a29ba400623f2ed3c30fa6c562cac04e55a1eafd4ad4e1aa6d')
+    print getFriend2_hash('2596600470', 'eb0a52bb7e2145ae9bf4b8ccdcee4d384e6952887524430a1b4917f1b09ae5b3')
