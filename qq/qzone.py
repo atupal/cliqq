@@ -1,19 +1,32 @@
 
 import urllib
+import qq.encryp_and_hash.getACSRFToken as getACSRFToken
 
 class qzone():
     def __init__(self, qq):
         self.qq = qq
 
     def dispose_shuoshuo(self, content):
-        url = 'http://qz.qq.com/cgi-bin/mobile_update_mood?g_tk=1753255923&g_ltk=5381'
-        url = 'http://qz.qq.com/cgi-bin/mobile_update_mood?g_tk=1167784737&g_ltk=5381'
-        referer = 'http://qz.qq.com/2596600470/fic/'
-        referer = 'http://qz.qq.com/1063918489/fic/'
-        #user_agent = 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) \
-                #AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7'
-        data = 'con=%E6%88%91%E5%AF%82%E5%AF%9E%E8%A3%85%E9%80%BC%E8%BF%B7%E4%BA%BA&suin=1063918489&reply=0&g_tk=1753255923&g_ltk=5381'
-        data = 'con=%E6%88%91%E5%AF%82%E5%AF%9E%E8%A3%85%E9%80%BC%E8%BF%B7%E4%BA%BA&suin=1063918489&reply=0&g_tk=1167784737&g_ltk=5381'
-        self.qq.request(url, referer = referer, data = data)
+        url = 'http://qz.qq.com/cgi-bin/mobile_update_mood'
+        gt = getACSRFToken.getACSRFToken(self.qq)
+        gt_k = 'g_tk=' + str(gt.getACSRFToken('skey')) + '&g_ltk=' + str(gt.getACSRFToken('lskey'))
+        url += '?' + gt_k
+        referer = 'http://qz.qq.com/'+'1063918489'+'/fic/'
+        data = 'con='+urllib.quote(content)+'&suin='+'1063918489'+'&reply=0&' + gt_k
+        return self.qq.request(url, referer = referer, data = data)
+
+    def comment_shuoshuo(self, uin, content):
+        param = 't1_source=1&t1_uin=639431633&t1_tid=d1f31c26f97a6e51ca210700&signin=0&sceneid=0'
+        param = urllib.quote(param)
+        gt = getACSRFToken.getACSRFToken(self.qq)
+        url = 'http://taotao.qq.com/cgi-bin/emotion_cgi_re_feeds?g_tk=' + str(gt.getACSRFToken('skey'))
+        data = 'ouin=1063918489\
+                &content='+urllib.quote(content)+'\
+                &param='+param+'\
+                &reqref=feeds\
+                &feedversion=1\
+                &g_tk='+str(gt.getACSRFToken('skey'))+'\
+                &qzreferrer=http%3A%2F%2Fqz.qq.com%2F1063918489%2Ffic%2F'
+        return self.qq.request(url, data = data)
 
 
