@@ -105,6 +105,8 @@ class webqq(threading.Thread):
             if DEBUG:print cookie.name, ":",  cookie.value
             if cookie.name == 'ptwebqq':
                 self.ptwebqq = cookie.value
+            elif cookie.name == 'uin':
+                self.uin = cookie.value
 
         if DEBUG:print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()
         #cs = ['%s=%s' %  (c.name, c.value) for c in self.cookies]
@@ -148,7 +150,7 @@ class webqq(threading.Thread):
         try:
             url = 'http://s.web2.qq.com/api/get_user_friends2'
             import getFriend2_hash
-            ptwebqq_hash = getFriend2_hash.getFriend2_hash('1063918489', self.ptwebqq)
+            ptwebqq_hash = getFriend2_hash.getFriend2_hash(self.uin[1:], self.ptwebqq)
             print ptwebqq_hash
             #data = 'r=%7B%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq'] +'%22%7D'
             data = 'r=%7B%22h%22%3A%22hello%22%2C%22hash%22%3A%22'+ptwebqq_hash+'%22%2C%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq']+'%22%7D'
@@ -214,10 +216,12 @@ class webqq(threading.Thread):
                                  self.msg_queue.put((str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+str(res['value']['send_uin']), content,
                                     res['value']['from_uin'], 2  ))
                         else:
+                            print res
                             pass
                     except:
                         if content != '':
                             print res['value']
+                        print res
                         pass
             #新的ptwebqq值
             elif int(result['retcode']) == 116:
@@ -265,6 +269,20 @@ class webqq(threading.Thread):
             if DEBUG:print urllib2.urlopen(req).read()
         except Exception as e:
             print e
+
+    def request(self, url, methods = ['GET', 'POST'], data = None, referer = None, user_agent = None, origin = None, host = None):
+            if data:
+                req = urllib2.Request(url, data)
+            else:
+                req = urllib2.Request(url)
+            if referer:req.add_header('Referer', referer)
+            if user_agent:req.add_header('User-Agent', user_agent)
+            if origin:req.add_header('Origin', origin)
+            if host:req.add_header('Host', host)
+            print req.get_header('Referer')
+            print req.get_header('Host')
+            req = urllib2.urlopen(req)
+            return req
 
 def run():
     #user = raw_input('QQ:')
