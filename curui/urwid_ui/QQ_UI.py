@@ -1,5 +1,6 @@
 #coding=utf-8
 
+import time
 import urwid
 import sys
 reload(sys)
@@ -54,7 +55,10 @@ class QQ_UI():
         return text
 
     def categories_list(self):
-        self.cat_list_body = [urwid.Text(u'好友列表'), urwid.Divider()]
+        button_1 = urwid.Button(u'好友列表')
+        button_2 = urwid.Button(u'群列表')
+        button_3 = urwid.Button(u'最近联系人')
+        self.cat_list_body = [button_1, button_2, button_3, urwid.Divider()]
         for c in self.categories:
             button = urwid.Button(c)
             urwid.connect_signal(button, 'click', self.category_chosen, c)
@@ -65,7 +69,7 @@ class QQ_UI():
 
     def msg_bubble(self):
         testButton = urwid.Button('test')
-        urwid.connect_signal(testButton, 'click', self.msg_chosen, 'test')
+        urwid.connect_signal(testButton, 'click', self.msg_chosen, str(time.time()))
         self.msg_bubble_body = urwid.SimpleFocusListWalker([urwid.Divider(),urwid.Divider(), urwid.Text(u'消息'), testButton])
         self.msg_bubble_listBox = urwid.ListBox(self.msg_bubble_body)
         return self.msg_bubble_listBox
@@ -80,7 +84,19 @@ class QQ_UI():
         self.loop.widget = urwid.Filler(urwid.Pile([response, urwid.AttrMap(click, None, focus_map='reserved')]))
 
     def msg_chosen(self, button, msg_userName):
-        self.base.contents[1:] =[(urwid.ListBox([urwid.Button(msg_userName)]), self.base.options())]
+        cnt = len(self.base.contents)
+        text_dlg = urwid.Text(str(time.time()))
+        input_dlg = urwid.Edit('edit')
+        send = urwid.Button('send')
+        cancel = urwid.Button('cancel')
+        new_line_dlg = urwid.Filler(urwid.Pile([text_dlg, input_dlg, send, cancel]))
+        if cnt > 4:
+            self.base.contents = [self.base.contents[0]] + self.base.contents[2:]
+            #self.base.contents[4:] =[(urwid.ListBox([urwid.Button(str(time.time()))]), self.base.options())]
+            self.base.contents[4:] =[(new_line_dlg, self.base.options())]
+        else:
+            #self.base.contents[cnt:] =[(urwid.ListBox([urwid.Button(str(time.time()))]), self.base.options())]
+            self.base.contents[cnt:] =[(new_line_dlg, self.base.options())]
 
     def  exit_program(self, button):
         raise urwid.ExitMainLoop()
