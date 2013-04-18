@@ -35,6 +35,8 @@ import threading
 from random import randint
 import re
 
+import robot.pandorabots as bot
+
 
 class process_msg_daemon(threading.Thread):
     def __init__(self, msg_queue, qq, ui):
@@ -43,6 +45,7 @@ class process_msg_daemon(threading.Thread):
         self.qq = qq
         self.locale_message = open('res/message.dat', 'aw')
         self.ui = ui
+        self.bot = bot.bot()
 
     def run(self):
         while 1:
@@ -50,9 +53,11 @@ class process_msg_daemon(threading.Thread):
             #print msg[0], ':', msg[1]
             self.locale_message.write(str(msg[0]) + ':' + str(msg[1]) + '\n')
             if msg[3] == 1:
-                self.qq.sendMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
+                #self.qq.sendMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
+                self.qq.sendMsg(msg[2], self.bot.getMsg(str(msg[1])), face = randint(1,80))
             elif self.qq.gid[msg[2]] == 'test_1' or self.qq.gid[msg[2]] == '啦啦啦*17-422*啦啦啦' or self.qq.gid[msg[2]] == "alg":
-                self.qq.sendQunMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
+                #self.qq.sendQunMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
+                self.qq.sendQunMsg(msg[2], self.bot.getMsg(str(msg[1])), face = randint(1,80))
             self.ui.new_msg(msg)
             self.ui.loop.draw_screen()
             self.msg_queue.task_done()
