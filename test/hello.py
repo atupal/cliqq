@@ -1,27 +1,24 @@
 
 import urwid
 
-base = urwid.Columns([])
+def edi(button, (edit, text)):
+    text.set_text(str(edit.edit_text))
+    return
 
-text_dlg_pile = urwid.Pile([])
-for t in xrange(5):
-    text_dlg = urwid.Text(str(t))
-    text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(text_dlg, text_dlg_pile.options())]
+def open_dlg(button):
+    edit = urwid.Edit(':')
+    bt = urwid.Button('bt')
+    text = urwid.Text('orZ:')
+    urwid.connect_signal(bt, 'click', edi, (edit, text))
+    pile = urwid.Pile([edit, bt, text])
+    pile = urwid.Filler(pile)
+    l = len(base.contents)
+    base.contents[l:] = [(pile, base.options())]
 
-input_dlg = urwid.Edit(":")
-text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(input_dlg, text_dlg_pile.options())]
-
-send = urwid.Button('send')
-text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(send, text_dlg_pile.options())]
-
-cancel = urwid.Button('cancel')
-text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(cancel, text_dlg_pile.options())]
-
-new_line_dlg = urwid.Filler(text_dlg_pile)
-
-
-base.contents =[(new_line_dlg, base.options()), (urwid.Filler(urwid.Button('asdf')), base.options())]
+bt = urwid.Button('open')
+urwid.connect_signal(bt, 'click', open_dlg)
+bt = urwid.Filler(bt)
+base = urwid.Columns([bt])
 
 loop = urwid.MainLoop(base)
 loop.run()
-

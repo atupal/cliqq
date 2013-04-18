@@ -24,6 +24,7 @@
 #  site: http://atupal.org
 
 import urwid
+import datetime
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -34,7 +35,6 @@ import threading
 from random import randint
 import re
 
-input_dlg = urwid.Edit(":")
 
 class process_msg_daemon(threading.Thread):
     def __init__(self, msg_queue, qq, ui):
@@ -65,7 +65,7 @@ class QQ_UI():
             self.categories = choices
             return
         self.flag = 0
-        self.categories = set()
+        self.categories = {'我的好友'}
         self.msg = dict()
         self.msg_dlg = dict()
         Q.run()
@@ -136,12 +136,11 @@ class QQ_UI():
             text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(text_dlg, text_dlg_pile.options())]
 
         self.msg.pop(msg[2])
-        #input_dlg = urwid.Edit(":")
-        global input_dlg
+        input_dlg = urwid.Edit(":")
         text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(input_dlg, text_dlg_pile.options())]
 
         send = urwid.Button(u'send')
-        urwid.connect_signal(send, 'click', self.send_msg, (msg[2], str(input_dlg.edit_text) + "$"))
+        urwid.connect_signal(send, 'click', self.send_msg, (msg[2], input_dlg, msg[3]))
         #send = urwid.AttrMap(send, None, 'reversed')
         text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(send, text_dlg_pile.options())]
 
@@ -154,6 +153,8 @@ class QQ_UI():
         self.msg_dlg[str(msg[2])] = text_dlg_pile
         new_line_dlg = urwid.Filler(text_dlg_pile)
 
+        self.base.contents = [self.base.contents[0], (new_line_dlg, self.base.options())] + self.base.contents[1:4]
+        return
         if cnt > 4:
             self.base.contents = [self.base.contents[0]] + self.base.contents[2:]
             #self.base.contents[4:] =[(urwid.ListBox([urwid.Button(str(time.time()))]), self.base.options())]
@@ -182,7 +183,15 @@ class QQ_UI():
         pass
 
     def send_msg(self, button, msg_user_content):
-        self.qq.sendMsg(msg_user_content[0], msg_user_content[1])
+        if msg_user_content[2] == 1:
+            self.qq.sendMsg(msg_user_content[0], msg_user_content[1].edit_text)
+        else:
+            self.qq.sendQunMsg(msg_user_content[0], msg_user_content[1].edit_text)
+        msg = str(msg_user_content[0])
+        self.msg_dlg[msg].contents = self.msg_dlg[msg].contents[:-3] \
+                + [(urwid.Text("我 " + str(datetime.datetime.now())+'\n' + msg_user_content[1].edit_text + '\n'), self.msg_dlg[msg].options())] \
+                + self.msg_dlg[msg].contents[-3:]
+        msg_user_content[1].set_edit_text('')
         pass
 
     def  exit_program(self, button):

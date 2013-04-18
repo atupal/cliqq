@@ -114,15 +114,20 @@ class webqq(threading.Thread):
         self.cookies.save('res/loginGet.cookie')
 
     def loginPost(self):
-        url = 'http://d.web2.qq.com/channel/login2'
-        data = 'r=%7B%22status%22%3A%22online%22%2C%22ptwebqq%22%3A%22' + self.ptwebqq + '%22%2C%22passwd_sig%22%3A%22%22%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3Anull%7D&clientid='+self.clientid+'&psessionid=null'
-        req = urllib2.Request(url, data)
-        #req.add_header('Cookie', self.mycookie)
-        req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
-        req = urllib2.urlopen(req)
-        self.result = json.load(req)
-        if DEBUG:print self.result['result']['vfwebqq'], self.result['result']['psessionid']
-        self.cookies.save('res/loginPost.cookie')
+        try:
+            url = 'http://d.web2.qq.com/channel/login2'
+            data = 'r=%7B%22status%22%3A%22online%22%2C%22ptwebqq%22%3A%22' + self.ptwebqq + '%22%2C%22passwd_sig%22%3A%22%22%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3Anull%7D&clientid='+self.clientid+'&psessionid=null'
+            req = urllib2.Request(url, data)
+            #req.add_header('Cookie', self.mycookie)
+            req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
+            req = urllib2.urlopen(req)
+            self.result = json.load(req)
+            if DEBUG:print self.result['result']['vfwebqq'], self.result['result']['psessionid']
+            self.cookies.save('res/loginPost.cookie')
+        except Exception as e:
+            print e
+            self.loginGet()
+            self.loginPost()
 
     def getGroupList(self):
         url = 'http://s.web2.qq.com/api/get_group_name_list_mask2'
