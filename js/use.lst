@@ -1,0 +1,5 @@
+
+feed.js:请求空间数据
+mobile.js:发表说说
+webqq.js:登录的时候ptwebqq的一个hash
+comm.js:check帐号,返回一个验证码,决定是否需要输入图片验证
