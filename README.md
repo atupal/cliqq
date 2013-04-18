@@ -13,3 +13,8 @@ plan
 [ ]在terminal中显示图片,表情,(验证码已经实现)
 [ ]接收发送文件
 [ ]浏览QQ空间,发表说说日志
+
+usage
+=====
+命令行模式: 在项目的根目录下执行 `python qq/runqq.py`
+ui模式:在项目的根目录下执行 python `main.py`
