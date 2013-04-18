@@ -168,6 +168,9 @@ class QQ_UI():
             self.msg_dlg[str(msg[2])].contents = self.msg_dlg[str(msg[2])].contents[:-3] \
                     + [(urwid.Text(msg[0] + msg[1] + '\n'), self.msg_dlg[str(msg[2])].options())] \
                     + self.msg_dlg[str(msg[2])].contents[-3:]
+            l = len(self.msg_dlg[str(msg[2])].contents)
+            if l > 7:
+                self.msg_dlg[str(msg[2])].contents = self.msg_dlg[str(msg[2])].contents[l - 7: l]
             return
         #self.msg = dict()
         if msg[2] in self.msg.keys():

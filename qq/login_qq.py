@@ -299,8 +299,13 @@ def run():
     #user = raw_input('QQ:')
     #pwd = getpass.getpass('password: ')
     import os
-    user = os.environ['QQ']
-    pwd = os.environ['QQ_PASSWD']
+    try:
+        user = os.environ['QQ']
+        pwd = os.environ['QQ_PASSWD']
+    except:
+        import getpass
+        user = raw_input('QQ:')
+        pwd = getpass.getpass('password: ')
     queue = Queue.Queue()
     qq = webqq(user, pwd, queue)
     qq.getSafeCode()
