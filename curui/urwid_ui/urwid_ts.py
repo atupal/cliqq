@@ -28,14 +28,15 @@ class process_msg_daemon(threading.Thread):
             self.msg_queue.task_done()
 
 
-choices = {'friend', 'friend2', 'yukangle', '1', '2', '3'}
+choices = {'friend', 'friend2', 'yukangle', '3', '2', '1','4', '5', '6', '7', '8', '9', '10', '11', '12','13','15', 'a', 'b', 'c', 'd', 'e', 'd', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v','x','y','z','hef','dsfl','sdf'}
+choices = {'friend', 'friend2', 'yukangle','1', '2','3'}
 group_list = {
         'friend'   : {'tom', 'jimi', 'marry'},
         'friend2'  : {'burenshi', 'nimei'},
         'yukangle' : {'atupal', 'fy', 'wsq'},
         '1'        : {'1', '11', '111'},
         '2'        : {'2', '222', '2222'},
-        '3'        : {'3', '33', '333'}
+        '3'        : {'3', '33', '333'},
         }
 
 class top():

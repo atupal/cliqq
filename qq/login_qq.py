@@ -205,23 +205,27 @@ class webqq(threading.Thread):
                         if res['poll_type'] == 'message':
                             #print self.uin[res['value']['from_uin']] \
                              #       ,': ', res['value']['content'][1]
-                            self.msg_queue.put( (str(datetime.datetime.now()) + '\n' + self.uin[res['value']['from_uin']], content, res['value']['from_uin'], 1 ))
+                            self.msg_queue.put( (self.uin[res['value']['from_uin']]\
+                                    + ' ' +  str(datetime.datetime.now()) + '\n' , content, res['value']['from_uin'], 1 ))
                         elif res['poll_type'] == 'group_message':
                             #print self.gid[res['value']['from_uin']] \
                              #       ,': ', res['value']['content'][1]
                              try:
-                                 self.msg_queue.put( (str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+self.uin[res['value']['send_uin']], content,
+                                 self.msg_queue.put( ( self.gid[res['value']['from_uin']] +'#'+self.uin[res['value']['send_uin']]\
+                                         + ' ' +str(datetime.datetime.now()) + '\n', content,
                                     res['value']['from_uin'] , 2))
                              except:
-                                 self.msg_queue.put((str(datetime.datetime.now()) + '\n' + self.gid[res['value']['from_uin']] +'#'+str(res['value']['send_uin']), content,
+                                 self.msg_queue.put((self.gid[res['value']['from_uin']] +'#'+str(res['value']['send_uin'])\
+                                         + ' ' +str(datetime.datetime.now()) + '\n' , content,
                                     res['value']['from_uin'], 2  ))
                         else:
-                            print res
+                            #print res
                             pass
                     except:
                         if content != '':
-                            print res['value']
-                        print res
+                            pass
+                            #print res['value']
+                        #print res
                         pass
             #新的ptwebqq值
             elif int(result['retcode']) == 116:
@@ -254,7 +258,7 @@ class webqq(threading.Thread):
             req = urllib2.Request(url, data)
             #req.add_header('Cookie', self.mycookie)
             req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
-            if DEBUG:print urllib2.urlopen(req).read()
+            if DEBUG: urllib2.urlopen(req).read()
         except Exception as e:
             print e
 

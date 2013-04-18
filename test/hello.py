@@ -1,31 +1,27 @@
 
 import urwid
 
-def  exit_on_q(key):
-    if key in ('q', 'Q'):
-        raise urwid.ExitMainLoop()
+base = urwid.Columns([])
 
-palette = [
-        ('banner', 'black', 'light gray', '', '#ffa', '#60d'),
-        ('streak', 'black', 'dark red','', 'g50', '#60a'),
-        ('inside', '', '', '', 'g38', '#808'),
-        ('outside', '', '', '', 'g27', '#a06'),
-        ('bg', 'black', 'dark blue', '', 'g7', '#d06'),
-        ]
+text_dlg_pile = urwid.Pile([])
+for t in xrange(5):
+    text_dlg = urwid.Text(str(t))
+    text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(text_dlg, text_dlg_pile.options())]
 
-placeholder = urwid.SolidFill()
-loop = urwid.MainLoop(placeholder, palette, unhandled_input = exit_on_q)
-loop.screen.set_terminal_properties(colors = 256)
-loop.widget = urwid.AttrMap(placeholder, 'bg')
-loop.widget.original_widget = urwid.Filler(urwid.Pile([]))
+input_dlg = urwid.Edit(":")
+text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(input_dlg, text_dlg_pile.options())]
 
-div = urwid.Divider()
-outside = urwid.AttrMap(div, 'outside')
-inside = urwid.AttrMap(div, 'inside')
-txt = urwid.Text(('banner', 'Hello sdf'), align = 'center')
-streak = urwid.AttrMap(txt, 'streak')
-pile = loop.widget.base_widget
-for item in [outside, inside, streak, inside, outside]:
-    pile.contents.append((item, pile.options()))
+send = urwid.Button('send')
+text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(send, text_dlg_pile.options())]
 
+cancel = urwid.Button('cancel')
+text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(cancel, text_dlg_pile.options())]
+
+new_line_dlg = urwid.Filler(text_dlg_pile)
+
+
+base.contents =[(new_line_dlg, base.options()), (urwid.Filler(urwid.Button('asdf')), base.options())]
+
+loop = urwid.MainLoop(base)
 loop.run()
+

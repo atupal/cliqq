@@ -32,6 +32,9 @@ try:from qq.runqq import msg_queue
 except:pass
 import threading
 from random import randint
+import re
+
+input_dlg = urwid.Edit(":")
 
 class process_msg_daemon(threading.Thread):
     def __init__(self, msg_queue, qq, ui):
@@ -64,6 +67,7 @@ class QQ_UI():
         self.flag = 0
         self.categories = set()
         self.msg = dict()
+        self.msg_dlg = dict()
         Q.run()
 
         Q.pro_msg = process_msg_daemon(msg_queue, Q.qq, self)
@@ -82,12 +86,15 @@ class QQ_UI():
             text.set_text(text.text + '\n' + i)
         return text
 
+    #好友列表
     def categories_list(self):
 
         button_1 = urwid.Button(u'好友列表')
         button_2 = urwid.Button(u'群列表')
         button_3 = urwid.Button(u'最近联系人')
-        self.cat_list_body = [button_1, button_2, button_3, urwid.Divider()]
+        self.cat_list_body = [urwid.AttrMap(button_1, None, 'reversed'),\
+                urwid.AttrMap(button_2, None, 'reversed'),\
+                urwid.AttrMap(button_3, None, 'reversed'), urwid.Divider()]
         for c in self.categories:
             button = urwid.Button(c)
             urwid.connect_signal(button, 'click', self.category_chosen, c)
@@ -96,10 +103,12 @@ class QQ_UI():
         self.cat_list_listBox = urwid.ListBox(urwid.SimpleFocusListWalker(self.cat_list_body))
         return self.cat_list_listBox
 
+    #消息列表
     def msg_bubble(self):
         #testButton = urwid.Button('test')
         #urwid.connect_signal(testButton, 'click', self.msg_chosen, str(time.time()))
-        self.msg_bubble_body = urwid.SimpleFocusListWalker([urwid.Divider(),urwid.Divider(), urwid.Text(u'消息')])
+        self.msg_bubble_body = urwid.SimpleFocusListWalker([urwid.Divider(),urwid.Divider(),\
+                urwid.AttrMap(urwid.Text(u'消息'), None , focus_map = 'reversed')])
         self.msg_bubble_listBox = urwid.ListBox(self.msg_bubble_body)
         return self.msg_bubble_listBox
 
@@ -114,15 +123,37 @@ class QQ_UI():
         self.loop.widget = urwid.Filler(urwid.Pile([response, urwid.AttrMap(click, None, focus_map='reserved')]))
 
     def msg_chosen(self, button, msg):
+        pos = self.msg_bubble_listBox.focus_position
+        self.msg_bubble_listBox.body.__delitem__(pos)
+
         cnt = len(self.base.contents)
-        #text_dlg = urwid.Text(str(time.time()))
-        text_dlg = urwid.Text(self.msg[msg[2]])
+        #text_dlg = urwid.Text(self.msg[msg[2]])
+
+        title_text = urwid.Text(str(msg[2]))
+        text_dlg_pile = urwid.Pile([title_text])
+        for t in self.msg[msg[2]]:
+            text_dlg = urwid.Text(t)
+            text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(text_dlg, text_dlg_pile.options())]
+
         self.msg.pop(msg[2])
-        input_dlg = urwid.Edit(":")
-        send = urwid.Button('send')
+        #input_dlg = urwid.Edit(":")
+        global input_dlg
+        text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(input_dlg, text_dlg_pile.options())]
+
+        send = urwid.Button(u'send')
         urwid.connect_signal(send, 'click', self.send_msg, (msg[2], str(input_dlg.edit_text) + "$"))
-        cancel = urwid.Button('cancel')
-        new_line_dlg = urwid.Filler(urwid.Pile([text_dlg, urwid.Divider(), input_dlg, urwid.Divider(), send, urwid.Divider(), cancel]))
+        #send = urwid.AttrMap(send, None, 'reversed')
+        text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(send, text_dlg_pile.options())]
+
+        cancel = urwid.Button(u'cancel')
+        urwid.connect_signal(cancel, 'click', self.cancel, msg[2])
+        #cancel = urwid.AttrMap(cancel, None, 'reversed')
+        text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(cancel, text_dlg_pile.options())]
+
+        #new_line_dlg = urwid.Filler(urwid.Pile([text_dlg_pile, urwid.Divider(), input_dlg, urwid.Divider(), send, urwid.Divider(), cancel]))
+        self.msg_dlg[str(msg[2])] = text_dlg_pile
+        new_line_dlg = urwid.Filler(text_dlg_pile)
+
         if cnt > 4:
             self.base.contents = [self.base.contents[0]] + self.base.contents[2:]
             #self.base.contents[4:] =[(urwid.ListBox([urwid.Button(str(time.time()))]), self.base.options())]
@@ -132,15 +163,20 @@ class QQ_UI():
             self.base.contents[cnt:] =[(new_line_dlg, self.base.options())]
 
     def new_msg(self, msg):
+        if str(msg[2]) in self.msg_dlg.keys():
+            self.msg_dlg[str(msg[2])].contents = self.msg_dlg[str(msg[2])].contents[:-3] \
+                    + [(urwid.Text(msg[0] + msg[1] + '\n'), self.msg_dlg[str(msg[2])].options())] \
+                    + self.msg_dlg[str(msg[2])].contents[-3:]
+            return
         #self.msg = dict()
         if msg[2] in self.msg.keys():
-            self.msg[msg[2]] += msg[0] + msg[1] + '\n'
+            self.msg[msg[2]].append(msg[0] + msg[1] + '\n')
         else:
-            self.msg[msg[2]] = msg[0] + msg[1] + '\n'
+            self.msg[msg[2]] = [msg[0] + msg[1] + '\n']
             try:
                 new_msg_bt = urwid.Button(str(self.qq.uin[msg[2]]))
             except:
-                new_msg_bt = urwid.Button(msg[0].split(' ')[0])
+                new_msg_bt = urwid.Button(re.split(' |#', msg[0])[0])
             urwid.connect_signal(new_msg_bt, 'click', self.msg_chosen, msg)
             self.msg_bubble_listBox.body.insert(0, new_msg_bt)
         pass
@@ -152,7 +188,16 @@ class QQ_UI():
     def  exit_program(self, button):
         raise urwid.ExitMainLoop()
 
-    def cancel(self,button):
+    #关闭当前对话框
+    def cancel(self,button, msg):
+        pos = 1
+        flag = 0
+        for pos in xrange(1, len(self.base.contents), 1):
+            if self.base.contents[pos][0].original_widget.contents[0][0].get_text() == str(msg):
+                flag = 1
+                break
+        if flag:
+            self.base.contents = self.base.contents[:pos] + self.base.contents[pos + 1:]
         pass
 
     def begin(self, button=None):
@@ -173,8 +218,8 @@ class QQ_UI():
 
         self.left_bar_pile = urwid.Pile([self.cat_list_overlay, self.msg_bubble_overlay])
 
-        test = urwid.Button('test')
-        self.msg_bubble_listBox.body.insert(0, test)
+        #test = urwid.Button('test')
+        #self.msg_bubble_listBox.body.insert(0, test)
 
         self.base = urwid.Columns([self.left_bar_pile], dividechars = 1, min_width = 10)
         self.loop = urwid.MainLoop(self.base, palette = [('reversed', 'standout', '')])
