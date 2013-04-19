@@ -92,5 +92,6 @@ def getFriend2_hash2(b, i):
 
 
 if __name__ == "__main__":
-    #print getFriend2_hash('2596600470', 'eb0a52bb7e2145ae9bf4b8ccdcee4d384e6952887524430a1b4917f1b09ae5b3')
-    print getFriend2_hash2('1063918489', '5719ee9e5e95b787611c600817742f06d76581d4d52e79ca38cbd9bf06b69524')
+    uin = raw_input('uin:')
+    ptwebqq = raw_input('ptwebqq:')
+    print getFriend2_hash2(uin, ptwebqq)
