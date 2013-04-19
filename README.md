@@ -18,7 +18,7 @@ usage
 =====
 
 依赖
-==========
+==
 - urwid
 - imaging
 
