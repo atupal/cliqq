@@ -52,6 +52,8 @@ class process_msg_daemon(threading.Thread):
             msg = self.msg_queue.get()
             #print msg[0], ':', msg[1]
             self.locale_message.write(str(msg[0]) + ':' + str(msg[1]) + '\n')
+            self.ui.new_msg(msg)
+            self.ui.loop.draw_screen()
             if msg[3] == 1:
                 #self.qq.sendMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
                 self.qq.sendMsg(msg[2], self.bot.getMsg(str(msg[1])), face = randint(1,80))
@@ -59,8 +61,6 @@ class process_msg_daemon(threading.Thread):
                     or self.qq.gid[msg[2]] == "小琪@兄弟":
                 #self.qq.sendQunMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
                 self.qq.sendQunMsg(msg[2], self.bot.getMsg(str(msg[1])), face = randint(1,80))
-            self.ui.new_msg(msg)
-            self.ui.loop.draw_screen()
             self.msg_queue.task_done()
 
 
@@ -72,8 +72,11 @@ class QQ_UI():
             return
         self.flag = 0
         self.categories = {'我的好友'}
-        self.msg = dict()
-        self.msg_dlg = dict()
+        #self.msg = dict()
+        import collections
+        self.msg = collections.OrderedDict()
+        #self.msg_dlg = dict()
+        self.msg_dlg = collections.OrderedDict()
         Q.run()
 
         Q.pro_msg = process_msg_daemon(msg_queue, Q.qq, self)
@@ -129,19 +132,45 @@ class QQ_UI():
         self.loop.widget = urwid.Filler(urwid.Pile([response, urwid.AttrMap(click, None, focus_map='reserved')]))
 
     def msg_chosen(self, button, msg):
-        pos = self.msg_bubble_listBox.focus_position
-        self.msg_bubble_listBox.body.__delitem__(pos)
+        if str(msg[2]) in self.msg_dlg.keys():
+            for i in xrange(4):
+                if len(self.msg[msg[2]]) == 0:
+                    pos = self.msg_bubble_listBox.focus_position
+                    self.msg_bubble_listBox.body.__delitem__(pos)
+                    self.msg.pop(msg[2])
+                    return
+                self.msg_dlg[str(msg[2])].contents = self.msg_dlg[str(msg[2])].contents[:-3] \
+                        + [(urwid.Text(self.msg[msg[2]][0]), self.msg_dlg[str(msg[2])].options())] \
+                        + self.msg_dlg[str(msg[2])].contents[-3:]
+                self.msg[msg[2]].remove(self.msg[msg[2]][0])
+
+                l = len(self.msg_dlg[str(msg[2])].contents)
+                if l > 7:
+                    self.msg_dlg[str(msg[2])].contents = self.msg_dlg[str(msg[2])].contents[l - 7: l]
+            return
+
+        #pos = self.msg_bubble_listBox.focus_position
+        #self.msg_bubble_listBox.body.__delitem__(pos)
 
         cnt = len(self.base.contents)
         #text_dlg = urwid.Text(self.msg[msg[2]])
 
         title_text = urwid.Text(str(msg[2]))
         text_dlg_pile = urwid.Pile([title_text])
-        for t in self.msg[msg[2]]:
-            text_dlg = urwid.Text(t)
+        #for t in self.msg[msg[2]]:
+        #    text_dlg = urwid.Text(t)
+        #    text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(text_dlg, text_dlg_pile.options())]
+        for i in xrange(4):
+            if len(self.msg[msg[2]]) == 0:
+                pos = self.msg_bubble_listBox.focus_position
+                self.msg_bubble_listBox.body.__delitem__(pos)
+                self.msg.pop(msg[2])
+                break
+            text_dlg = urwid.Text(self.msg[msg[2]][0])
+            self.msg[msg[2]].remove(self.msg[msg[2]][0])
             text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(text_dlg, text_dlg_pile.options())]
 
-        self.msg.pop(msg[2])
+        #self.msg.pop(msg[2])
         input_dlg = urwid.Edit(":")
         text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(input_dlg, text_dlg_pile.options())]
 
@@ -159,7 +188,10 @@ class QQ_UI():
         self.msg_dlg[str(msg[2])] = text_dlg_pile
         new_line_dlg = urwid.Filler(text_dlg_pile)
 
+        #最多只显示四个聊天窗口,多于的就关闭
         self.base.contents = [self.base.contents[0], (new_line_dlg, self.base.options())] + self.base.contents[1:4]
+        for i in xrange(len(self.msg_dlg) - 4):
+            self.msg_dlg.popitem()
         return
         if cnt > 4:
             self.base.contents = [self.base.contents[0]] + self.base.contents[2:]
@@ -170,6 +202,9 @@ class QQ_UI():
             self.base.contents[cnt:] =[(new_line_dlg, self.base.options())]
 
     def new_msg(self, msg):
+        if msg[2] in self.msg.keys():
+            self.msg[msg[2]].append(msg[0] + msg[1] + '\n')
+            return
         if str(msg[2]) in self.msg_dlg.keys():
             self.msg_dlg[str(msg[2])].contents = self.msg_dlg[str(msg[2])].contents[:-3] \
                     + [(urwid.Text(msg[0] + msg[1] + '\n'), self.msg_dlg[str(msg[2])].options())] \
@@ -179,8 +214,6 @@ class QQ_UI():
                 self.msg_dlg[str(msg[2])].contents = self.msg_dlg[str(msg[2])].contents[l - 7: l]
             return
         #self.msg = dict()
-        if msg[2] in self.msg.keys():
-            self.msg[msg[2]].append(msg[0] + msg[1] + '\n')
         else:
             self.msg[msg[2]] = [msg[0] + msg[1] + '\n']
             try:
@@ -201,6 +234,10 @@ class QQ_UI():
                 + [(urwid.Text("我 " + str(datetime.datetime.now())+'\n' + msg_user_content[1].edit_text + '\n'), self.msg_dlg[msg].options())] \
                 + self.msg_dlg[msg].contents[-3:]
         msg_user_content[1].set_edit_text('')
+
+        l = len(self.msg_dlg[str(msg_user_content[0])].contents)
+        if l > 7:
+            self.msg_dlg[str(msg_user_content[0])].contents = self.msg_dlg[str(msg_user_content[0])].contents[l - 7: l]
         pass
 
     def  exit_program(self, button):
@@ -211,12 +248,14 @@ class QQ_UI():
         pos = 1
         flag = 0
         for pos in xrange(1, len(self.base.contents), 1):
-            if self.base.contents[pos][0].original_widget.contents[0][0].get_text() == str(msg):
+            with open('res/ui.log', 'w') as f:
+                f.write(str(self.base.contents[pos][0].original_widget.contents[0][0].get_text()[0]))
+            if str(self.base.contents[pos][0].original_widget.contents[0][0].get_text()[0]) == str(msg):
                 flag = 1
+            if flag:
+                self.base.contents = self.base.contents[:pos] + self.base.contents[pos + 1:]
+                self.msg_dlg.pop(str(msg))
                 break
-        if flag:
-            self.base.contents = self.base.contents[:pos] + self.base.contents[pos + 1:]
-        pass
 
     def begin(self, button=None):
         #好友列表
