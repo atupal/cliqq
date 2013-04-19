@@ -8,6 +8,7 @@ import threading
 from encryption import QQmd5
 import datetime
 import verifyImg as verifyImg
+import time
 
 DEBUG = True
 
@@ -60,9 +61,15 @@ class webqq(threading.Thread):
         self.categories = None
         self.msg_queue = msg_queue
         self.success_login = False
+        self.login_cnt = 0
 
     def getSafeCode(self):
-        url = 'https://ssl.ptlogin2.qq.com/check?uin=' + str(self.user) + '&appid=1003903&js_ver=10017&js_type=0&login_sig=0ihp3t5ghfoonssle-98x9hy4uaqmpvu*8*odgl5vyerelcb8fk-y3ts6c3*7e8-&u1=http%3A%2F%2Fweb2.qq.com%2Floginproxy.html&r=0.8210972726810724'
+        url = (
+                'https://ssl.ptlogin2.qq.com/check?uin='  +
+                str(self.user) + '&appid=1003903&js_ver=10017&js_type=0'
+                '&login_sig=0ihp3t5ghfoonssle-98x9hy4uaqmpvu*8*odgl5vyerelcb8fk-y3ts6c3*7e8-'
+                '&u1=http%3A%2F%2Fweb2.qq.com%2Floginproxy.html&r=' + str(random.random())
+                )
         req = urllib2.Request(url)
         #self.mycookie += "confirmuin=" + self.user + ";"
         #req.add_header('Cookie', self.mycookie)
@@ -92,31 +99,83 @@ class webqq(threading.Thread):
         #cs = ['%s=%s' %  (c.name, c.value) for c in self.cookies]
         #self.mycookie += ";" "; ".join(cs)
 
-        login_url = 'https://ssl.ptlogin2.qq.com/login?u='+self.user +'&p=' + str(QQmd5().md5_2(self.pwd, self.verifycode1, self.verifycode2)) + '&verifycode=' + self.verifycode1 + '&webqq_type=10&remember_uin=1&login2qq=1&aid=1003903&u1=http%3A%2F%2Fweb.qq.com%2Floginproxy.html%3Flogin2qq%3D1%26webqq_type%3D10&h=1&ptredirect=0&ptlang=2052&from_ui=1&pttype=1&dumy=&fp=loginerroralert&action=2-14-32487&mibao_css=m_webqq&t=1&g=1&js_type=0&js_ver=10015&login_sig=0ihp3t5ghfoonssle-98x9hy4uaqmpvu*8*odgl5vyerelcb8fk-y3ts6c3*7e8-'
+        login_url = (
+                'https://ssl.ptlogin2.qq.com/login?u='+self.user
+                + '&p=' + str(QQmd5().md5_2(self.pwd, self.verifycode1, self.verifycode2))
+                + '&verifycode=' + self.verifycode1
+                + '&webqq_type=10'
+                '&remember_uin=1'
+                '&login2qq=1'
+                '&aid=1003903'
+                #'&u1=http%3A%2F%2Fweb.qq.com%2Floginproxy.html%3Flogin2qq%3D1%26webqq_type%3D10'
+                '&u1=' + str(urllib.quote('http://web2.qq.com/loginproxy.html?login2qq=1&webqq_type=10')).replace('/', '%2f')
+                +'&h=1'
+                '&ptredirect=0'
+                '&ptlang=2052'
+                '&from_ui=1'
+                '&pttype=1'
+                '&dumy='
+                '&fp=loginerroralert'
+                '&action=2-14-32487'
+                '&mibao_css=m_webqq'
+                '&t=1'
+                '&g=1'
+                '&js_type=0'
+                '&js_ver=10015'
+                '&login_sig=0ihp3t5ghfoonssle-98x9hy4uaqmpvu*8*odgl5vyerelcb8fk-y3ts6c3*7e8-'
+                )
 
         req = urllib2.Request(login_url)
-        req.add_header("Referer", "https://ui.ptlogin2.qq.com/cgi-bin/login?target=self&style=5&mibao_css=m_webqq&appid=1003903&enable_qlogin=0&no_verifyimg=1&s_url=http%3A%2F%2Fweb.qq.com%2Floginproxy.html&f_url=loginerroralert&strong_login=1&login_state=10&t=20121029001")
+        req.add_header("Referer", (
+                'https://ui.ptlogin2.qq.com/cgi-bin/login?'
+                'target=self'
+                '&style=5'
+                '&mibao_css=m_webqq'
+                '&appid=1003903'
+                '&enable_qlogin=0'
+                '&no_verifyimg=1'
+                '&s_url=http%3A%2F%2Fweb.qq.com%2Floginproxy.html'
+                '&f_url=loginerroralert&strong_login=1'
+                '&login_state=10'
+                '&t=20121029001'
+            ))
 
         #req.add_header("Cookie", self.mycookie)
         #self.opener.addheaders.append(("Cookie", self.mycookie))
-        req = urllib2.urlopen(req)
-        if DEBUG:print req.read()
-        for cookie in self.cookies:
-            if DEBUG:print cookie.name, ":",  cookie.value
-            if cookie.name == 'ptwebqq':
-                self.ptwebqq = cookie.value
-            elif cookie.name == 'uin':
-                self.uin = cookie.value
 
-        if DEBUG:print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()
+        req = urllib2.urlopen(req)
+
+        if DEBUG:
+            print req.read()
+
+        try:
+            for cookie in self.cookies:
+                if DEBUG:
+                    print cookie.name, ":",  cookie.value
+                if cookie.name == 'ptwebqq':
+                    self.ptwebqq = cookie.value
+                elif cookie.name == 'uin':
+                    self.uin = cookie.value
+        except Exception as e:
+            print e
+            self.loginGet()
+
+        if DEBUG:
+            print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()
         #cs = ['%s=%s' %  (c.name, c.value) for c in self.cookies]
         #self.mycookie += ";" "; ".join(cs)
         self.cookies.save('res/loginGet.cookie')
 
     def loginPost(self):
         try:
+
             url = 'http://d.web2.qq.com/channel/login2'
-            data = 'r=%7B%22status%22%3A%22online%22%2C%22ptwebqq%22%3A%22' + self.ptwebqq + '%22%2C%22passwd_sig%22%3A%22%22%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3Anull%7D&clientid='+self.clientid+'&psessionid=null'
+            data = (
+                    'r=%7B%22status%22%3A%22online%22%2C%22ptwebqq%22%3A%22' + self.ptwebqq
+                    + '%22%2C%22passwd_sig%22%3A%22%22%2C%22clientid%22%3A%22'
+                    +self.clientid+'%22%2C%22psessionid%22%3Anull%7D&clientid='
+                    +self.clientid+'&psessionid=null')
+
             req = urllib2.Request(url, data)
             #req.add_header('Cookie', self.mycookie)
             req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
@@ -125,6 +184,10 @@ class webqq(threading.Thread):
             if DEBUG:print self.result['result']['vfwebqq'], self.result['result']['psessionid']
             self.cookies.save('res/loginPost.cookie')
         except Exception as e:
+            self.login_cnt += 1
+            if self.login_cnt > 10:
+                print '登录太频繁, 等待5秒'
+                time.sleep(5)
             print e
             self.loginGet()
             self.loginPost()
@@ -158,23 +221,26 @@ class webqq(threading.Thread):
             ptwebqq_hash = getFriend2_hash.getFriend2_hash2(self.uin[1:], self.ptwebqq)
             print ptwebqq_hash
             #data = 'r=%7B%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq'] +'%22%7D'
-            data = 'r=%7B%22h%22%3A%22hello%22%2C%22hash%22%3A%22'+ptwebqq_hash+'%22%2C%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq']+'%22%7D'
+            data = ('r=%7B%22h%22%3A%22hello%22%2C%22hash%22%3A%22'
+                    +ptwebqq_hash+'%22%2C%22vfwebqq%22%3A%22'
+                    +self.result['result']['vfwebqq']+'%22%7D')
+
             req = urllib2.Request(url, data)
             req.add_header('Referer', 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1')
             req = urllib2.urlopen(req)
-            friend = json.load(req)
+            self.friend_ret = json.load(req)
             self.uin = dict()
             self.markname = dict()
             self.nick = dict()
             self.cat = dict()
-            self.friend = friend['result']['friends']
-            self.categories = friend['result']['categories']
+            self.friend = self.friend_ret['result']['friends']
+            self.categories = self.friend_ret['result']['categories']
             for fri in self.friend:
                 self.cat[fri['uin']] = fri['categories']
-            for info in friend['result']['info']:
+            for info in self.friend_ret['result']['info']:
                 self.nick[info['nick']] = info['uin']
                 self.uin[info['uin']] = info['nick']
-            for mark in friend['result']['marknames']:
+            for mark in self.friend_ret['result']['marknames']:
                 self.markname[mark['markname']] = mark['uin']
                 self.uin[mark['uin']] = mark['markname']
 
@@ -184,18 +250,31 @@ class webqq(threading.Thread):
             #    f.write(str(self.cookies))
             self.cookies.save('res/getFriend.cookie')
         except Exception as e:
-            print friend
+            self.login_cnt += 1
+            if self.login_cnt > 10:
+                print '登录太频繁, 等待5秒'
+                time.sleep(5)
+            print self.friend_ret
             print e
             self.getFriend()
 
     def getMeg(self):
-        if DEBUG:print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()
+        if DEBUG:
+            print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()
         pass
 
     def poll2(self):
         try:
             url = 'http://d.web2.qq.com/channel/poll2'
-            data ='r=%7B%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%2C%22key%22%3A0%2C%22ids%22%3A%5B%5D%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+            data =(
+                    'r=%7B%22clientid%22%3A%22'+self.clientid
+                    +'%22%2C%22psessionid%22%3A%22'
+                    +self.result['result']['psessionid']
+                    +'%22%2C%22key%22%3A0%2C%22ids%22%3A%5B%5D%7D&clientid='
+                    +self.clientid+'&psessionid='
+                    +self.result['result']['psessionid']
+                    )
+
             req = urllib2.Request(url, data)
             #req.add_header('Cookie', self.mycookie)
             req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=3')
@@ -258,8 +337,31 @@ class webqq(threading.Thread):
         try:
             uin = str(uin)
             url = 'http://d.web2.qq.com/channel/send_buddy_msg2'
-            if face is None:data = 'r=%7B%22to%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\",[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
-            else:data = 'r=%7B%22to%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\", [\"face\",'+str(face)+r'], [\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+            if face is None:
+                data = ('r=%7B%22to%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'
+                +urllib.quote(r'":"[\"'+msg
+                +r'\",\"\\n【提示：此用户正在使用shift webQq】\",'
+                +r'[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')
+                +'msg_id%22%3A13190001%2C%22clientid%22%3A%22'
+                +self.clientid+'%22%2C%22psessionid%22%3A%22'
+                +self.result['result']['psessionid']+'%22%7D&clientid='
+                +self.clientid+'&psessionid='
+                +self.result['result']['psessionid']
+                )
+            else:
+                data = 'r=%7B%22to%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\", [\"face\",'+str(face)+r'],[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+                '''
+                data = 'r=%7B%22to%22%3A'+uin
+                +'%2C%22face%22%3A237%2C%22content'
+                +urllib.quote(r'":"[\"'
+                +msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\", [\"face\",'
+                +str(face)+r'],[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')
+                +'msg_id%22%3A13190001%2C%22clientid%22%3A%22'
+                +self.clientid+'%22%2C%22psessionid%22%3A%22'
+                +self.result['result']['psessionid']+'%22%7D&clientid='
+                +self.clientid+'&psessionid='
+                +self.result['result']['psessionid']
+                '''
             req = urllib2.Request(url, data)
             #req.add_header('Cookie', self.mycookie)
             req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
@@ -271,8 +373,34 @@ class webqq(threading.Thread):
         try:
             uin = str(uin)
             url = 'http://d.web2.qq.com/channel/send_qun_msg2'
-            if face is None:data = 'r=%7B%22group_uin%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\",[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
-            else:data = 'r=%7B%22group_uin%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\", [\"face\",'+str(face)+r'], [\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+            if face is None:
+                data = 'r=%7B%22group_uin%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\",[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+                '''
+                data = 'r=%7B%22group_uin%22%3A'+uin
+                +'%2C%22face%22%3A237%2C%22content'
+                +urllib.quote(r'":"[\"'
+                        +msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\",'
+                        +r'[\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')
+                +'msg_id%22%3A13190001%2C%22clientid%22%3A%22'
+                +self.clientid+'%22%2C%22psessionid%22%3A%22'
+                +self.result['result']['psessionid']
+                +'%22%7D&clientid='+self.clientid
+                +'&psessionid='+self.result['result']['psessionid']
+                '''
+            else:
+                data = 'r=%7B%22group_uin%22%3A'+uin+'%2C%22face%22%3A237%2C%22content'+urllib.quote(r'":"[\"'+msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\", [\"face\",'+str(face)+r'], [\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')+'msg_id%22%3A13190001%2C%22clientid%22%3A%22'+self.clientid+'%22%2C%22psessionid%22%3A%22'+self.result['result']['psessionid']+'%22%7D&clientid='+self.clientid+'&psessionid='+self.result['result']['psessionid']
+                '''
+                data = 'r=%7B%22group_uin%22%3A'+uin
+                +'%2C%22face%22%3A237%2C%22content'
+                +urllib.quote(r'":"[\"'
+                        +msg+r'\",\"\\n【提示：此用户正在使用shift webQq】\", [\"face\",'
+                        +str(face)+r'], [\"font\",{\"name\":\"宋体\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"000000\"}]]","')
+                +'msg_id%22%3A13190001%2C%22clientid%22%3A%22'
+                +self.clientid+'%22%2C%22psessionid%22%3A%22'
+                +self.result['result']['psessionid']
+                +'%22%7D&clientid='+self.clientid
+                +'&psessionid='+self.result['result']['psessionid']
+                '''
             req = urllib2.Request(url, data)
             req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
             if DEBUG:print urllib2.urlopen(req).read()
