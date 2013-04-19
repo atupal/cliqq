@@ -43,6 +43,7 @@ nosetests.xml
 #local resource
 message.dat
 .cookie
+.log
 
 #cpp
 .out
