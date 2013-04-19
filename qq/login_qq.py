@@ -391,7 +391,15 @@ class webqq(threading.Thread):
                 self.qq.getGroupList()
                 self.qq.getFriend()
             else:
-                pass
+                self.login_cnt += 1
+                if self.login_cnt > 10:
+                    print '频繁登录,请等待10s'
+                    time.sleep(10)
+                self.getSafeCode()
+                self.loginGet()
+                self.loginPost()
+                self.getGroupList()
+                self.getFriend()
             return
         except Exception as e:
             print e
