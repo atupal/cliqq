@@ -16,11 +16,10 @@ plan
 
 usage
 =====
+命令行模式: 在项目的根目录下执行 `python qq/runqq.py`
+ui模式:在项目的根目录下执行 `python `main.py
 
 依赖
 ==
 - urwid
 - imaging
-
-命令行模式: 在项目的根目录下执行 `python qq/runqq.py`
-ui模式:在项目的根目录下执行 `python `main.py
