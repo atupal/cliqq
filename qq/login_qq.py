@@ -27,6 +27,7 @@ self.markname   : 用户备注->用户ID
 self.nick       : 用户昵称->用户ID
 self.cat        : 用户ID->分组
 self.gcode      : 群ID->群信息
+self.clientid   : 随机生成的客户端ID
 '''
 
 import urllib
@@ -214,6 +215,7 @@ class webqq(threading.Thread):
         print '拉取好友信息...'
         self.cookies.save('res/getGroupList.cookie')
 
+
     def getFriend(self):
         try:
             url = 'http://s.web2.qq.com/api/get_user_friends2'
@@ -256,7 +258,46 @@ class webqq(threading.Thread):
                 time.sleep(5)
             print self.friend_ret
             print e
-            self.getFriend()
+            self.getFriend_2()
+    def getFriend_2(self):
+        try:
+            import requests
+            url = 'http://s.web2.qq.com/api/get_user_friends2'
+            headers = {'Referer': 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1'}
+            import getFriend2_hash
+            ptwebqq_hash = getFriend2_hash.getFriend2_hash2(self.uin[1:], self.ptwebqq)
+            cookies = dict(ptwebqq = str(self.ptwebqq))
+            data = ('r=%7B%22h%22%3A%22hello%22%2C%22hash%22%3A%22'
+                    +ptwebqq_hash+'%22%2C%22vfwebqq%22%3A%22'
+                    +self.result['result']['vfwebqq']+'%22%7D')
+
+            req = requests.post(url, cookies = cookies, data = data, headers = headers)
+
+            self.friend_ret = json.loads(req.text)
+            self.uin = dict()
+            self.markname = dict()
+            self.nick = dict()
+            self.cat = dict()
+            self.friend = self.friend_ret['result']['friends']
+            self.categories = self.friend_ret['result']['categories']
+            for fri in self.friend:
+                self.cat[fri['uin']] = fri['categories']
+            for info in self.friend_ret['result']['info']:
+                self.nick[info['nick']] = info['uin']
+                self.uin[info['uin']] = info['nick']
+            for mark in self.friend_ret['result']['marknames']:
+                self.markname[mark['markname']] = mark['uin']
+                self.uin[mark['uin']] = mark['markname']
+
+            print '好友信息拉取成功!'
+            self.success_login = True
+            #with open('res/login_cookie', 'w') as f:
+            #    f.write(str(self.cookies))
+        except Exception as e:
+            print e
+            exit()
+
+
 
     def getMeg(self):
         if DEBUG:
