@@ -17,6 +17,8 @@ class qzone():
 
     def comment_shuoshuo(self, uin, content):
         param = 't1_source=1&t1_uin=639431633&t1_tid=d1f31c26f97a6e51ca210700&signin=0&sceneid=0'
+        param = 't1_source=1&t1_uin=1063918489&t1_tid=991b6a3f49ce70519f5a0100&signin=0&sceneid=0'
+        param = 't1_source=1&t1_uin=2426400798&t1_tid=1ef09f904dce7051ad9b0c00&signin=0&sceneid=0'
         param = urllib.quote(param)
         gt = getACSRFToken.getACSRFToken(self.qq)
         url = 'http://taotao.qq.com/cgi-bin/emotion_cgi_re_feeds?g_tk=' + str(gt.getACSRFToken('skey'))
