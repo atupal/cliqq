@@ -156,7 +156,7 @@ class webqq(threading.Thread):
                 if cookie.name == 'ptwebqq':
                     self.ptwebqq = cookie.value
                 elif cookie.name == 'uin':
-                    self.uin = cookie.value
+                    self.uin_user = cookie.value
         except Exception as e:
             print e
             self.loginGet()
@@ -182,7 +182,12 @@ class webqq(threading.Thread):
             req.add_header('Referer', 'http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2')
             req = urllib2.urlopen(req)
             self.result = json.load(req)
-            if DEBUG:print self.result['result']['vfwebqq'], self.result['result']['psessionid']
+            if self.result['retcode'] != 0:
+                print self.result['retcode']
+                return False
+            if DEBUG:
+                print '*************************************************'
+                print 'vfwebqq, psessionid:', self.result['result']['vfwebqq'], self.result['result']['psessionid']
             self.cookies.save('res/loginPost.cookie')
         except Exception as e:
             self.login_cnt += 1
@@ -220,7 +225,10 @@ class webqq(threading.Thread):
         try:
             url = 'http://s.web2.qq.com/api/get_user_friends2'
             import getFriend2_hash
-            ptwebqq_hash = getFriend2_hash.getFriend2_hash2(self.uin[1:], self.ptwebqq)
+            cnt = 1
+            while self.uin_user[cnt] == '0':
+                cnt += 1
+            ptwebqq_hash = getFriend2_hash.getFriend2_hash2(self.uin_user[cnt:], self.ptwebqq)
             print ptwebqq_hash
             #data = 'r=%7B%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq'] +'%22%7D'
             data = ('r=%7B%22h%22%3A%22hello%22%2C%22hash%22%3A%22'
@@ -229,6 +237,8 @@ class webqq(threading.Thread):
 
             req = urllib2.Request(url, data)
             req.add_header('Referer', 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1')
+            print 'ptwebqq=' + self.ptwebqq
+            print data
             req = urllib2.urlopen(req)
             self.friend_ret = json.load(req)
             self.uin = dict()
@@ -252,28 +262,46 @@ class webqq(threading.Thread):
             #    f.write(str(self.cookies))
             self.cookies.save('res/getFriend.cookie')
         except Exception as e:
-            self.login_cnt += 1
-            if self.login_cnt > 10:
-                print '登录太频繁, 等待5秒'
-                time.sleep(5)
+            cnt = 1
+            while self.uin_user[cnt] == '0':
+                cnt += 1
+            import getFriend2_hash
+            ptwebqq_hash = getFriend2_hash.getFriend2_hash2(self.uin_user[cnt:], self.ptwebqq)
+            data = ('r=%7B%22h%22%3A%22hello%22%2C%22hash%22%3A%22'
+                    +ptwebqq_hash+'%22%2C%22vfwebqq%22%3A%22'
+                    +self.result['result']['vfwebqq']+'%22%7D')
+            print 'ptwebqq=' + self.ptwebqq
+            print data
+            print '获取列表失败,重试中...'
+
             print self.friend_ret
             print e
-            self.getFriend_2()
+            while not self.getFriend_2():
+                self.getFriend_2()
+
+        else:
+            pass
+
     def getFriend_2(self):
         try:
+            cnt = 1
+            while self.uin_user[cnt] == '0':
+                cnt += 1
             import requests
             url = 'http://s.web2.qq.com/api/get_user_friends2'
             headers = {'Referer': 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1'}
             import getFriend2_hash
-            ptwebqq_hash = getFriend2_hash.getFriend2_hash2(self.uin[1:], self.ptwebqq)
-            cookies = dict(ptwebqq = str(self.ptwebqq))
+            ptwebqq_hash = getFriend2_hash.getFriend2_hash2(self.uin_user[cnt:], self.ptwebqq)
+
             data = ('r=%7B%22h%22%3A%22hello%22%2C%22hash%22%3A%22'
                     +ptwebqq_hash+'%22%2C%22vfwebqq%22%3A%22'
                     +self.result['result']['vfwebqq']+'%22%7D')
 
+            cookies = dict(ptwebqq=str(self.ptwebqq))
             req = requests.post(url, cookies = cookies, data = data, headers = headers)
+            #req = requests.post(url,data = data, headers = headers)
 
-            self.friend_ret = json.loads(req.text)
+            self.friend_ret = json.loads(req.content)
             self.uin = dict()
             self.markname = dict()
             self.nick = dict()
@@ -291,13 +319,12 @@ class webqq(threading.Thread):
 
             print '好友信息拉取成功!'
             self.success_login = True
+            return True
             #with open('res/login_cookie', 'w') as f:
             #    f.write(str(self.cookies))
         except Exception as e:
             print e
-            exit()
-
-
+            print self.friend_ret
 
     def getMeg(self):
         if DEBUG:
