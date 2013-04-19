@@ -50,5 +50,47 @@ def getFriend2_hash(a, e):
         d += k[c[b] & 15]
     return d
 
+'''
+			O = function(b, i) {
+				for (var a = i + "password error", s = "", j = [];;) if (s.length <= a.length) {
+					if (s += b, s.length == a.length) break
+				} else {
+					s = s.slice(0, a.length);
+					break
+				}
+				for (var d = 0; d < s.length; d++) j[d] = s.charCodeAt(d) ^ a.charCodeAt(d);
+				a = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
+				s = "";
+				for (d = 0; d < j.length; d++) s += a[j[d] >> 4 & 15], s += a[j[d] & 15];
+				return s
+			},
+'''
+
+def getFriend2_hash2(b, i):
+    a = str(i) + "password error"
+    s = ""
+    while 1:
+        if len(s) <= len(a):
+            s += str(b)
+            if len(s) == len(a):break
+            else:
+                pass
+        else:
+            s = s[0:len(a)]
+            break
+    j = [0 for i in xrange(len(s))]
+
+    for d in xrange(len(s)):
+        j[d] = ord(s[d]) ^ ord(a[d])
+
+	aa = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
+	ss = ""
+    for d in xrange(len(j)):
+        ss += aa[j[d] >> 4 & 15]
+        ss += aa[j[d] & 15]
+    return ss
+
+
 if __name__ == "__main__":
-    print getFriend2_hash('2596600470', 'eb0a52bb7e2145ae9bf4b8ccdcee4d384e6952887524430a1b4917f1b09ae5b3')
+    #print getFriend2_hash('2596600470', 'eb0a52bb7e2145ae9bf4b8ccdcee4d384e6952887524430a1b4917f1b09ae5b3')
+    print getFriend2_hash2('1063918489', '5719ee9e5e95b787611c600817742f06d76581d4d52e79ca38cbd9bf06b69524')
