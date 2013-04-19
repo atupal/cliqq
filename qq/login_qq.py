@@ -155,7 +155,7 @@ class webqq(threading.Thread):
         try:
             url = 'http://s.web2.qq.com/api/get_user_friends2'
             import getFriend2_hash
-            ptwebqq_hash = getFriend2_hash.getFriend2_hash(self.uin[1:], self.ptwebqq)
+            ptwebqq_hash = getFriend2_hash.getFriend2_hash2(self.uin[1:], self.ptwebqq)
             print ptwebqq_hash
             #data = 'r=%7B%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq'] +'%22%7D'
             data = 'r=%7B%22h%22%3A%22hello%22%2C%22hash%22%3A%22'+ptwebqq_hash+'%22%2C%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq']+'%22%7D'

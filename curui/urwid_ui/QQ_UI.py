@@ -55,7 +55,8 @@ class process_msg_daemon(threading.Thread):
             if msg[3] == 1:
                 #self.qq.sendMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
                 self.qq.sendMsg(msg[2], self.bot.getMsg(str(msg[1])), face = randint(1,80))
-            elif self.qq.gid[msg[2]] == 'test_1' or self.qq.gid[msg[2]] == '啦啦啦*17-422*啦啦啦' or self.qq.gid[msg[2]] == "alg":
+            elif self.qq.gid[msg[2]] == 'test_1' or self.qq.gid[msg[2]] == '啦啦啦*17-422*啦啦啦' or self.qq.gid[msg[2]] == "alg"\
+                    or self.qq.gid[msg[2]] == "小琪@兄弟":
                 #self.qq.sendQunMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
                 self.qq.sendQunMsg(msg[2], self.bot.getMsg(str(msg[1])), face = randint(1,80))
             self.ui.new_msg(msg)
