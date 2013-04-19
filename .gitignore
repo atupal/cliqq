@@ -42,6 +42,7 @@ nosetests.xml
 
 #local resource
 message.dat
+.cookie
 
 #cpp
 .out

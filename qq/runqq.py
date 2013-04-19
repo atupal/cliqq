@@ -49,9 +49,17 @@ class runqq(threading.Thread):
     def run(self):
         #user = raw_input('QQ:')
         #pwd = getpass.getpass('password: ')
-        import os
-        user = os.environ['QQ']
-        pwd = os.environ['QQ_PASSWD']
+
+        #user = os.environ['QQ']
+        #pwd = os.environ['QQ_PASSWD']
+        try:
+            import os
+            user = os.environ['QQ']
+            pwd = os.environ['QQ_PASSWD']
+        except:
+            import getpass
+            user = raw_input('QQ:')
+            pwd = getpass.getpass('password: ')
 
         self.user = user
         self.pwd = pwd
