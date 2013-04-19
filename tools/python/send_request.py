@@ -33,8 +33,7 @@ class request:
 
         return self.opener.open(req).read()
 
-
 if __name__ == "__main__":
-    print request().sendR()
+    print request().sendR(url = 'http://s.web2.qq.com/api/get_user_friends2', refefer = 'http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=1')
 
 
