@@ -1,5 +1,5 @@
 
 feed.js:请求空间数据
 mobile.js:发表说说
-egg.all.js:登录的时候ptwebqq的一个hash
+eqq.all.js:登录的时候ptwebqq的一个hash
 comm.js:check帐号,返回一个验证码,决定是否需要输入图片验证,密码加密逻辑也在这个文件中,在814行(格式化过后的文件)
