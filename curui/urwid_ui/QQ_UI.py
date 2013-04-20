@@ -35,7 +35,10 @@ import threading
 from random import randint
 import re
 
-import robot.pandorabots as bot
+try:
+    import robot.pandorabots as bot
+except:
+    pass
 
 
 class process_msg_daemon(threading.Thread):
@@ -89,11 +92,13 @@ class QQ_UI():
 
         self.palette = []
 
+    '''
     def line_dialog(self, uid, Text = None):
         text = urwid.Text(uid, align = 'center', wrap='clip')
         for i in Text:
             text.set_text(text.text + '\n' + i)
         return text
+    '''
 
     #好友列表
     def categories_list(self):
@@ -121,6 +126,7 @@ class QQ_UI():
         self.msg_bubble_listBox = urwid.ListBox(self.msg_bubble_body)
         return self.msg_bubble_listBox
 
+    #打开某个好友分组
     def category_chosen(self, button, category):
         #pos = self.cat_list_listBox.focus_position
         #self.cat_list_listBox.body.insert(pos + 1, urwid.Text(' nimei'))
@@ -131,6 +137,7 @@ class QQ_UI():
         #self.base.original_widget = urwid.Filler(urwid.Pile([response, urwid.AttrMap(click, None, focus_map='reserved')]))
         self.loop.widget = urwid.Filler(urwid.Pile([response, urwid.AttrMap(click, None, focus_map='reserved')]))
 
+    #点击查看某条消息时如果消息多余四条就只显示四条,继续点击继续显示
     def msg_chosen(self, button, msg):
         if str(msg[2]) in self.msg_dlg.keys():
             for i in xrange(4):
@@ -188,6 +195,9 @@ class QQ_UI():
         self.msg_dlg[str(msg[2])] = text_dlg_pile
         new_line_dlg = urwid.Filler(text_dlg_pile)
 
+        import dialog_box
+        new_line_dlg = dialog_box.dialog_box(new_line_dlg, self)
+
         #最多只显示四个聊天窗口,多于的就关闭
         self.base.contents = [self.base.contents[0], (new_line_dlg, self.base.options())] + self.base.contents[1:4]
         for i in xrange(len(self.msg_dlg) - 4):
@@ -224,6 +234,15 @@ class QQ_UI():
             self.msg_bubble_listBox.body.insert(0, new_msg_bt)
         pass
 
+    #打开分组
+    def open_cat(self):
+        pass
+
+    #打开聊天窗口
+    def open_dialog(self):
+        pass
+
+    #发送消息
     def send_msg(self, button, msg_user_content):
         if msg_user_content[2] == 1:
             self.qq.sendMsg(msg_user_content[0], msg_user_content[1].edit_text)
@@ -240,6 +259,7 @@ class QQ_UI():
             self.msg_dlg[str(msg_user_content[0])].contents = self.msg_dlg[str(msg_user_content[0])].contents[l - 7: l]
         pass
 
+    #退出MainLoop
     def  exit_program(self, button):
         raise urwid.ExitMainLoop()
 
@@ -249,29 +269,32 @@ class QQ_UI():
         flag = 0
         for pos in xrange(1, len(self.base.contents), 1):
             with open('res/ui.log', 'w') as f:
-                f.write(str(self.base.contents[pos][0].original_widget.contents[0][0].get_text()[0]))
-            if str(self.base.contents[pos][0].original_widget.contents[0][0].get_text()[0]) == str(msg):
+                f.write(str(self.base.contents[pos][0].original_widget.original_widget.contents[0][0].get_text()[0]))
+            if str(self.base.contents[pos][0].original_widget.original_widget.contents[0][0].get_text()[0]) == str(msg):
                 flag = 1
             if flag:
                 self.base.contents = self.base.contents[:pos] + self.base.contents[pos + 1:]
                 self.msg_dlg.pop(str(msg))
                 break
 
+    #加载界面
     def begin(self, button=None):
-        #好友列表
+        #好友列表栏
+        import cat_box
         self.cat_list_pad = urwid.Padding(self.categories_list(), left = 2, right = 2)
-        self.cat_list_overlay = urwid.Overlay(self.cat_list_pad, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
+        self.cat_list_overlay = cat_box.cat_box(urwid.Overlay(self.cat_list_pad, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
                 align = 'left', width = 40,
                 valign = 'top', height = 40,
-                min_width = 20, min_height = 9)
+                min_width = 20, min_height = 9), self)
 
 
-        #消息气泡
+        #消息栏
+        import msg_box
         self.msg_bubble_pad = urwid.Padding(self.msg_bubble(), left = 2, right = 2)
-        self.msg_bubble_overlay = urwid.Overlay(self.msg_bubble_pad, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
+        self.msg_bubble_overlay = msg_box.msg_box(urwid.Overlay(self.msg_bubble_pad, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
                 align = 'left', width = 40,
                 valign = 'top', height = 40,
-                min_width = 20, min_height = 1)
+                min_width = 20, min_height = 1), self)
 
         self.left_bar_pile = urwid.Pile([self.cat_list_overlay, self.msg_bubble_overlay])
 
