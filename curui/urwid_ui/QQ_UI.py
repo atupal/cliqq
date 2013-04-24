@@ -139,6 +139,7 @@ class QQ_UI():
 
     #点击查看某条消息时如果消息多余四条就只显示四条,继续点击继续显示
     def msg_chosen(self, button, msg):
+        #如果聊天窗口已经打开了就直接显示新信息在聊天窗口中
         if str(msg[2]) in self.msg_dlg.keys():
             for i in xrange(4):
                 if len(self.msg[msg[2]]) == 0:
@@ -167,6 +168,7 @@ class QQ_UI():
         #for t in self.msg[msg[2]]:
         #    text_dlg = urwid.Text(t)
         #    text_dlg_pile.contents[len(text_dlg_pile.contents):]=[(text_dlg, text_dlg_pile.options())]
+        #显示四条新消息以免刷屏
         for i in xrange(4):
             if len(self.msg[msg[2]]) == 0:
                 pos = self.msg_bubble_listBox.focus_position
@@ -211,6 +213,7 @@ class QQ_UI():
             #self.base.contents[cnt:] =[(urwid.ListBox([urwid.Button(str(time.time()))]), self.base.options())]
             self.base.contents[cnt:] =[(new_line_dlg, self.base.options())]
 
+    #收到新的消息
     def new_msg(self, msg):
         if msg[2] in self.msg.keys():
             self.msg[msg[2]].append(msg[0] + msg[1] + '\n')
