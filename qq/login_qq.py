@@ -63,6 +63,7 @@ class webqq(threading.Thread):
         self.msg_queue = msg_queue
         self.success_login = False
         self.login_cnt = 0
+        self.login_fail = False
 
     def getSafeCode(self):
         url = (
@@ -81,7 +82,7 @@ class webqq(threading.Thread):
         self.check = verifycode.group(1)
         self.verifycode1 = verifycode.group(2)
         self.verifycode2 = verifycode.group(3)
-        if self.check == "1":
+        if self.check == "1" or self.login_fail:
             url = 'https://ssl.captcha.qq.com/getimage?&uin='+str(self.user)+'&aid=1002101&0.45644426648505' + str(random.randint(10,99))
             req = urllib2.Request(url)
             req = urllib2.urlopen(req)
