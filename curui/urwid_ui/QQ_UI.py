@@ -56,6 +56,7 @@ class process_msg_daemon(threading.Thread):
             #print msg[0], ':', msg[1]
             self.locale_message.write(str(msg[0]) + ':' + str(msg[1]) + '\n')
             self.ui.new_msg(msg)
+            #刷新界面
             self.ui.loop.draw_screen()
             if msg[3] == 1:
                 #self.qq.sendMsg(msg[2], '我寂寞装逼迷人', face = randint(1,80))
@@ -128,6 +129,22 @@ class QQ_UI():
 
     #打开某个好友分组
     def category_chosen(self, button, category):
+
+        self.cat_list_overlay.original_widget.original_widget = \
+                urwid.Overlay(urwid.ListBox(urwid.SimpleFocusListWalker([urwid.Button("ssdf")])),
+                self.cat_list_overlay.original_widget,
+                align = 'center', width = ('relative', 80),
+                valign = 'middle', height = ('relative', 80),
+                min_width = 24, min_height = 8,
+                left = 3,
+                right = 30,
+                top = 2,
+                bottom = 20
+                )
+
+        #刷新界面
+        self.loop.draw_screen()
+
         #pos = self.cat_list_listBox.focus_position
         #self.cat_list_listBox.body.insert(pos + 1, urwid.Text(' nimei'))
         return
