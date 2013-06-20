@@ -35,15 +35,15 @@ nosetests.xml
 .pydevproject
 ################################################################
 #picture
-.jpg
-.png
-.jpeg
-.gif
+*.jpg
+*.png
+*.jpeg
+*.gif
 
 #local resource
 message.dat
-.cookie
-.log
+*.cookie
+*.log
 
 #cpp
-.out
+*.out
