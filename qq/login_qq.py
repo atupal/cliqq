@@ -114,17 +114,21 @@ class webqq(threading.Thread):
                 +'&h=1'
                 '&ptredirect=0'
                 '&ptlang=2052'
+                '&daid=164'  # atupal
                 '&from_ui=1'
                 '&pttype=1'
                 '&dumy='
                 '&fp=loginerroralert'
-                '&action=2-14-32487'
+                #'&action=2-14-32487'
+                '&action=2-34-20120'
                 '&mibao_css=m_webqq'
                 '&t=1'
                 '&g=1'
                 '&js_type=0'
-                '&js_ver=10015'
-                '&login_sig=0ihp3t5ghfoonssle-98x9hy4uaqmpvu*8*odgl5vyerelcb8fk-y3ts6c3*7e8-'
+                #'&js_ver=10015'
+                '&js_ver=10041'
+                #'&login_sig=0ihp3t5ghfoonssle-98x9hy4uaqmpvu*8*odgl5vyerelcb8fk-y3ts6c3*7e8-'
+                '&login_sig=HW-HptrIEOpShz9pkt4s2aip*VmRQHSV28tVMb9tndUp1liWqE56eAsNYlk0IwAB'
                 )
 
         req = urllib2.Request(login_url)
@@ -147,8 +151,14 @@ class webqq(threading.Thread):
 
         req = urllib2.urlopen(req)
 
-        if DEBUG:
-            print req.read()
+        def ptuiCB(*args):
+          return args[2]
+
+        if DEBUG or 1:  # TODO(atupal)
+            content = req.read()
+            print content
+            check_sig_url = eval(content.strip().strip('\r\n').strip('\n').strip(';'), {"__builtins__": None}, {'ptuiCB': ptuiCB})
+            urllib2.urlopen(check_sig_url)
 
         try:
             for cookie in self.cookies:
@@ -166,7 +176,8 @@ class webqq(threading.Thread):
             print urllib2.urlopen('http://web2.qq.com/web2/get_msg_tip?uin=&tp=1&id=0&retype=1&rc=0&lv=3&t=1358252543124').read()
         #cs = ['%s=%s' %  (c.name, c.value) for c in self.cookies]
         #self.mycookie += ";" "; ".join(cs)
-        self.cookies.save('res/loginGet.cookie')
+        try:self.cookies.save('res/loginGet.cookie')
+        except IOError:pass
 
     def loginPost(self):
         try:
@@ -189,13 +200,15 @@ class webqq(threading.Thread):
             if DEBUG:
                 print '*************************************************'
                 print 'vfwebqq, psessionid:', self.result['result']['vfwebqq'], self.result['result']['psessionid']
-            self.cookies.save('res/loginPost.cookie')
+            try:self.cookies.save('res/loginPost.cookie')
+            except IOError:pass
         except Exception as e:
             self.login_cnt += 1
             if self.login_cnt > 10:
                 print '登录太频繁, 等待5秒'
                 time.sleep(5)
             print e
+            self.getSafeCode()
             self.loginGet()
             self.loginPost()
 
@@ -219,7 +232,8 @@ class webqq(threading.Thread):
         print '拉取群信息...'
         print '群信息拉取成功'
         print '拉取好友信息...'
-        self.cookies.save('res/getGroupList.cookie')
+        try:self.cookies.save('res/getGroupList.cookie')
+        except IOError: pass
 
 
     def getFriend(self):
@@ -229,8 +243,7 @@ class webqq(threading.Thread):
             cnt = 1
             while self.uin_user[cnt] == '0':
                 cnt += 1
-            ptwebqq_hash = getFriend2_hash.getFriend2_hash2(self.uin_user[cnt:], self.ptwebqq)
-            print ptwebqq_hash
+            ptwebqq_hash = getFriend2_hash.getFriend2_hash3(self.uin_user[cnt:], self.ptwebqq)
             #data = 'r=%7B%22vfwebqq%22%3A%22'+self.result['result']['vfwebqq'] +'%22%7D'
             data = ('r=%7B%22h%22%3A%22hello%22%2C%22hash%22%3A%22'
                     +ptwebqq_hash+'%22%2C%22vfwebqq%22%3A%22'
