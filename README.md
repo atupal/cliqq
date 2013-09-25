@@ -1,3 +1,6 @@
+## please use the dev branch~! ##
+
+
 cliqq
 =====
 a idea: a cli qq use text dialog.
