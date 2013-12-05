@@ -47,3 +47,6 @@ message.dat
 
 #cpp
 *.out
+
+# virtualenv
+venv
