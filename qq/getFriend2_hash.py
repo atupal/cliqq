@@ -90,7 +90,21 @@ def getFriend2_hash2(b, i):
         ss += aa[j[d] & 15]
     return ss
 
+def getFriend_hash(b,i):
+    import PyV8
+    import urllib2
+    
+    data = urllib2.urlopen("http://0.web.qstatic.com/webqqpic/pubapps/0/50/eqq.all.js").read()
+    data = data.split("P=function")[1].split(",r=function")[0]
+    data = "P=function" + data
 
+    js = PyV8.JSContext()          
+    js.enter()                     
+
+    data = data + ';P("' + b + '","' + i + '");'
+    hash_friend = js.eval(data)
+    return hash_friend
+   
 if __name__ == "__main__":
     uin = raw_input('uin:')
     ptwebqq = raw_input('ptwebqq:')
