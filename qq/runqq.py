@@ -43,7 +43,14 @@ class process_msg_daemon(threading.Thread):
         threading.Thread.__init__(self)
         self.msg_queue = msg_queue
         self.qq = qq
-        self.locale_message = open('res/message.dat', 'aw')
+        # FIXME: windows 路径问题：https://github.com/atupal/cliqq/issues/6
+        # 关于windows的路径，不是特别了解，加上自己手头上没有windows机器
+        # 希望windows的用户可以测试下这个路径。
+        if (sys.platform == 'win32'):
+            path = os.path.abspath(os.path.dirname(sys.argv[0]))
+            self.locale_message = open(path+'res/message.dat', 'aw')
+        else:
+            self.locale_message = open('res/message.dat', 'aw')
 
     def run(self):
         while 1:
