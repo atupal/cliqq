@@ -15,6 +15,7 @@ class QQmd5:
         return hashlib.md5(s).hexdigest().upper()
 
     def hexchar2bin(self, uin):
+        uin = uin[:uin.find("'")]
         uin_final = ""
         uin = uin.split('\\x')
         for i in uin[1:]:
